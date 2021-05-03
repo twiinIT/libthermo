@@ -1,0 +1,7 @@
+name: libthermo-dev
+channels:
+  - conda-forge
+dependencies:
+  - cmake
+  - make
+  - gtest

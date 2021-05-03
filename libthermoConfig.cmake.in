@@ -1,0 +1,14 @@
+# libthermo cmake module
+# This module sets the following variables in your project:
+#
+#   libthermo_FOUND - true if libthermo found on the system
+#   libthermo_INCLUDE_DIRS - the directory containing libthermo headers
+#   libthermo_LIBRARY - empty
+
+
+@PACKAGE_INIT@
+
+if(NOT TARGET @PROJECT_NAME@)
+    include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+    get_target_property(@PROJECT_NAME@_INCLUDE_DIRS @PROJECT_NAME@ INTERFACE_INCLUDE_DIRECTORIES)
+endif()
