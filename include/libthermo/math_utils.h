@@ -24,7 +24,5 @@ namespace math {
 
     inline double sign(double a) { if (a >= 0.) { return 1.; } else { return -1.; } }
     inline double square(double a) { return a * a; }
-
-    double Polyval(std::vector<double> coeffs, double value);
 }
 #endif
