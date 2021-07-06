@@ -5,3 +5,8 @@ dependencies:
   - cmake
   - make
   - gtest
+  - xtensor
+  - tbb-devel
+  - xtensor-python
+  - pybind11
+  - numpy
