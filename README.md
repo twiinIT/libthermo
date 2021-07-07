@@ -1,10 +1,33 @@
 # libthermo
 
-A *fast* C++ thermodynamical library.
+A *fast* C++ thermodynamical gas library.
 
 `libthermo` targets high-performance computing using really simple/simplistic thermodynamical modelings instead of complex and more accurate approaches (such as https://cantera.org/).
 
 It's well fitted for industrial simulation where the base blocks need to be efficient to not become bottlenecks.
+
+## Modelings
+
+### Properties
+
+The library provides modelings for the following properties:
+
+|  Short  |          Long          |
+|:-------:|:----------------------:|
+|   Cp    | Specific heat pressure |
+|  Gamma  |  Specific heat ratio   |
+|    r    |      Gas constant      |
+|    H    |        Enthalpy        |
+|   Phi   |        Entropy         |
+|   PR    |     Pressure ratio     |
+| EffPoly |  Polytropic efficiency |
+
+### Properties
+
+For now, only ideal gas is implemented in `IdealGas` class.
+
+It has constant specific heat pressure, thus ratio.
+
 
 ## Benchmarks
 
@@ -13,6 +36,8 @@ Benchmarks can be ran using:
 - Python: `ipython python_benchs.ipy`
 
 The metrics are computed over 1M elements for operation only (allocation is not timed), and are given in nanoseconds/element:
+
+### IdealGas
 
 |  Case  | Pure NumPy  | C++ loop on vector | C++ xtensor  | + xsimd  | + tbb |  | pythermo* |
 |:------:|:-----------:|:------------------:|:------------:|:--------:|:-----:|--|:---------:|
