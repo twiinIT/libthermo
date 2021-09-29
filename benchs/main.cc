@@ -1,13 +1,16 @@
 #include "libthermo/ideal_gas.h"
+#include "libthermo/real_gas.h"
 
+#ifdef LIBTHERMO_USE_XTENSOR
 #include "xtensor/xtensor.hpp"
+#endif
 
 #include <iostream>
 #include <chrono>
 #include <functional>
 #include <string>
 #include <memory>
-
+#include <vector>
 
 namespace libthermo
 {
@@ -245,6 +248,7 @@ namespace libthermo
         std::cout << "Pout -> " << timeit(bench_pout, ntimes2) << " ns" << std::endl;
     }
 
+#ifdef LIBTHERMO_USE_XTENSOR
     template <class G>
     void benchmark_vector(G&& gas, std::size_t size, long ntimes)
     {
@@ -299,23 +303,51 @@ namespace libthermo
         std::cout << "EffPoly -> " << timeit(bench_EffPoly, ntimes) << " ns" << std::endl;
         std::cout << "Pout -> " << timeit(bench_pout, ntimes) << " ns" << std::endl;
     }
+#endif
 }
 
 int main()
 {
     using namespace libthermo;
+    double Tref = 288.15;
+    {
+        IdealGas gas(287.05287, 1004.685045);
 
-    IdealGas gas(287.05287, 1004.685045);
+        std::cout << "\n" << "Reference values" << std::endl;
+        std::cout << "Cp -> " << gas.Cp(Tref) << std::endl;
+        std::cout << "Gamma -> " << gas.Gamma(Tref) << std::endl;
+        std::cout << "H -> " << gas.H(Tref) << std::endl;
+        std::cout << "Phi -> " << gas.Phi(Tref) << std::endl;
 
-    std::cout << "Single value tests" << std::endl;
-    //benchmark_single_value(gas, 1000000, 50);
+        std::cout << "\nSingle value tests" << std::endl;
+        benchmark_single_value(gas, 1000000, 50);
 
-    std::cout << "\nLoop tests" << std::endl;
-    benchmark_loop(gas, 1000000, 1000);
+        std::cout << "\nLoop tests" << std::endl;
+        benchmark_loop(gas, 1000000, 500);
 
-    std::cout << "\nVector tests" << std::endl;
-    benchmark_vector(gas, 1000000, 1000);
+        std::cout << "\nVector tests" << std::endl;
+        benchmark_vector(gas, 1000000, 500);
+    }
 
+    {
+        RealGas gas(287.05287);
+
+        std::cout << "\n" << "Reference values" << std::endl;
+        std::cout << "Cp -> " << gas.Cp(Tref) << std::endl;
+        std::cout << "Gamma -> " << gas.Gamma(Tref) << std::endl;
+        std::cout << "H -> " << gas.H(Tref) << std::endl;
+        std::cout << "Phi -> " << gas.Phi(Tref) << std::endl;
+
+        std::cout << "\nSingle value tests" << std::endl;
+        benchmark_single_value(gas, 1000000, 50);
+
+        std::cout << "\nLoop tests" << std::endl;
+        benchmark_loop(gas, 1000000, 500);
+
+        std::cout << "\nVector tests" << std::endl;
+        benchmark_vector(gas, 1000000, 500);
+
+    }
     // std::cout << XSIMD_X86_INSTR_SET << std::endl;
 
     return 0;

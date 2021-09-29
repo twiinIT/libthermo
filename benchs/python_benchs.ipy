@@ -1,4 +1,4 @@
-from build.pythermo.pythermo import IdealGas
+from build.pythermo.pythermo import IdealGas, RealGas
 g = IdealGas(287, 1004)
 
 import numpy as np
@@ -12,10 +12,14 @@ eff = np.repeat(0.8, N)
 res = np.ones_like(t1)
 
 print("Benchmark pythermo")
+%timeit res = g.cp(t1)
 %timeit res = g.phi(t1)
 %timeit res = g.pr(t1, t2, 0.8)
 %timeit res = g.eff_poly(p1, t1, p2, t2)
 
+g2 = RealGas(287.05)
+print("Benchmark pythermo2")
+%timeit res = g2.cp(t1)
 
 class NumpyIdealGas:
 
