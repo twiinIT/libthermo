@@ -94,7 +94,8 @@ namespace libthermo
     auto IdealGas::Cp(const T& t) const
         -> std::enable_if_t<xt::detail::is_container<T>::value, T>
     {
-        return xt::full_like(t, cp);
+        return xt::broadcast(cp, t.shape());
+        //return xt::full_like(t, cp);
     }
 
     template<class T>

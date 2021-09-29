@@ -1,4 +1,5 @@
 #include "libthermo/ideal_gas.h"
+#include "libthermo/polynomial_gas.h"
 
 #include "xtensor/xtensor.hpp"
 
@@ -120,10 +121,12 @@ namespace libthermo
         std::cout << "Gamma -> " << timeit(bench_Gamma, ntimes*100) << " ns" << std::endl;
         std::cout << "H -> " << timeit(bench_H, ntimes*10) << " ns" << std::endl;
         std::cout << "Phi -> " << timeit(bench_Phi, ntimes) << " ns" << std::endl;
+        /*
         std::cout << "R -> " << timeit(bench_R, ntimes*10) << " ns" << std::endl;
         std::cout << "PR -> " << timeit(bench_PR, ntimes) << " ns" << std::endl;
         std::cout << "EffPoly -> " << timeit(bench_EffPoly, ntimes) << " ns" << std::endl;
         std::cout << "Pout -> " << timeit(bench_pout, ntimes) << " ns" << std::endl;
+        */
     }
 
     template <class G>
@@ -294,28 +297,62 @@ namespace libthermo
         std::cout << "Gamma -> " << timeit(bench_Gamma, ntimes) << " ns" << std::endl;
         std::cout << "H -> " << timeit(bench_H, ntimes) << " ns" << std::endl;
         std::cout << "Phi -> " << timeit(bench_Phi, ntimes) << " ns" << std::endl;
+        /*
         // std::cout << "R -> " << timeit(bench_R, ntimes) << " ns" << std::endl;
         std::cout << "PR -> " << timeit(bench_PR, ntimes) << " ns" << std::endl;
         std::cout << "EffPoly -> " << timeit(bench_EffPoly, ntimes) << " ns" << std::endl;
         std::cout << "Pout -> " << timeit(bench_pout, ntimes) << " ns" << std::endl;
+        */
     }
 }
 
 int main()
 {
     using namespace libthermo;
+    double Tref = 288.15;
+    {
+        IdealGas gas(287.05287, 1004.685045);
 
-    IdealGas gas(287.05287, 1004.685045);
+        std::cout << "\n" << "Reference values" << std::endl;
+        std::cout << "Cp -> " << gas.Cp(Tref) << std::endl;
+        std::cout << "Gamma -> " << gas.Gamma(Tref) << std::endl;
+        std::cout << "H -> " << gas.H(Tref) << std::endl;
+        std::cout << "Phi -> " << gas.Phi(Tref) << std::endl;
+/*
+        std::cout << "Single value tests" << std::endl;
+        benchmark_single_value(gas, 1000000, 50);
 
-    std::cout << "Single value tests" << std::endl;
-    //benchmark_single_value(gas, 1000000, 50);
+        std::cout << "\nLoop tests" << std::endl;
+        benchmark_loop(gas, 1000000, 1000);
 
-    std::cout << "\nLoop tests" << std::endl;
-    benchmark_loop(gas, 1000000, 1000);
+        std::cout << "\nVector tests" << std::endl;
+        benchmark_vector(gas, 1000000, 10000);
+*/
+    }
 
-    std::cout << "\nVector tests" << std::endl;
-    benchmark_vector(gas, 1000000, 1000);
+    {
+        PolyGas gas(287.05287, 1004.685045);
 
+        std::cout << "\n" << "Reference values" << std::endl;
+        std::cout << "Cp -> " << gas.Cp(Tref) << std::endl;
+        std::cout << "Gamma -> " << gas.Gamma(Tref) << std::endl;
+        std::cout << "H -> " << gas.H(Tref) << std::endl;
+        std::cout << "Phi -> " << gas.Phi(Tref) << std::endl;
+
+
+        //std::cout << "\n" << "Single value tests" << std::endl;
+        //benchmark_single_value(gas, 1000000, 100);
+    
+        //std::cout << "\nVector tests" << std::endl;
+        //benchmark_vector(gas, 1000000, 10000);
+
+        std::cout << "\nLoop tests" << std::endl;
+        benchmark_loop(gas, 1000000, 1000);
+
+        std::cout << "\nVector tests" << std::endl;
+        benchmark_vector(gas, 1000000, 5000);
+
+    }
     // std::cout << XSIMD_X86_INSTR_SET << std::endl;
 
     return 0;
