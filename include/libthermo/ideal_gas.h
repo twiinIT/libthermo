@@ -141,14 +141,14 @@ namespace libthermo
     auto IdealGas::EffPoly(const T& p1, const T& t1, const T& p2, const T& t2) const
         -> std::enable_if_t<!xt::detail::is_container<T>::value, T>
     {
-        return R<T>() * log(p2 / p1) / (Phi(t2) - Phi(t1));
+        return R<T>() * cp * log(p2 / p1) / std::log(t2 / t1);
     }
 
     template<class T>
     auto IdealGas::EffPoly(const T& p1, const T& t1, const T& p2, const T& t2) const
         -> std::enable_if_t<xt::detail::is_container<T>::value, T>
     {
-        return R<double>() * xt::log(p2 / p1) / (Phi(t2) - Phi(t1));
+        return R<double>() * cp * xt::log(p2 / p1) / xt::log(t2 / t1);
     }
 
     template<class T>
