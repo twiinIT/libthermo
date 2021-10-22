@@ -22,14 +22,15 @@
 namespace libthermo
 {
     using namespace xt;
-
+    
     template<int D>
     struct poly
     {
         template<class E, class It>
         static inline auto polyval(E&& x, It coeff)
-        {       
-            return (*coeff++) + x * poly<D-1>::polyval(x, coeff);
+        {
+            auto c = coeff++;
+            return *c + x * poly<D-1>::polyval(x, coeff);
         };
     };
 
@@ -37,28 +38,29 @@ namespace libthermo
     struct poly<0>
     {
         template<class E, class It>
-        static inline double polyval(E&& res, It coeff)
+        static inline double polyval(E&& x, It coeff)
         {
-            return 0;
+            return *coeff;
         };
     };
 
     template<int I, class T, class It>
-    static inline auto polyval(T&& t, It coeff)
+    static inline auto polyval(T&& x, It coeff)
     {
-        return poly<I>::polyval(t, coeff);
+        return poly<I>::polyval(x, coeff);
     };
 
     class PolyGas : public Gas<PolyGas>
     {
     public:
-        PolyGas(double r_, double cp_)
+        PolyGas(double r_)
             : r(r_)
-            , cp(cp_)
-            , gamma(cp_ / (cp_ - r_))
         {};
 
-        template<class T>
+        template<class T, std::enable_if_t<xt::detail::is_container<T>::value, int> = 0>
+        auto Gamma(const T& t) const;
+
+        template<class T, std::enable_if_t<!xt::detail::is_container<T>::value, int> = 0>
         auto Gamma(const T& t) const;
 
         template<class T>
@@ -98,7 +100,7 @@ namespace libthermo
         T TFromH(const T& h) const;
 
     protected:
-        double r, cp, gamma;
+        double r;
 
         static const std::size_t coeff_size = 7;
         // https://www.cerfacs.fr/antares/_downloads/6d913fcaec57101ff421a2220b0769db/antares_doc.pdf p272
@@ -108,7 +110,14 @@ namespace libthermo
 
     };
 
-    template<class T>
+    template<class T, std::enable_if_t<xt::detail::is_container<T>::value, int> = 0>
+    auto PolyGas::Gamma(const T& t) const
+    {
+        T tmp_cp = Cp(t);
+        return xt::eval(tmp_cp / (tmp_cp - 287.05));
+    }
+
+    template<class T, std::enable_if_t<!xt::detail::is_container<T>::value, int> = 0>
     auto PolyGas::Gamma(const T& t) const
     {
         T tmp_cp = Cp(t);
@@ -185,10 +194,5 @@ namespace libthermo
         return R<double>() * xt::log(p2 / p1) / dPhi(t1, t2);
     }
 
-    template<class T>
-    T PolyGas::TFromH(const T& h) const
-    { 
-        return h / cp; 
-    }
 }
 #endif
