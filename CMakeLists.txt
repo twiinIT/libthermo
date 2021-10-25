@@ -38,6 +38,7 @@ set(thermo_headers
     ${LIBTHERMO_INCLUDE_DIR}/libthermo/gas.h
     ${LIBTHERMO_INCLUDE_DIR}/libthermo/ideal_gas.h
     ${LIBTHERMO_INCLUDE_DIR}/libthermo/polynomial_gas.h
+    ${LIBTHERMO_INCLUDE_DIR}/libthermo/interp.h
     ${LIBTHERMO_INCLUDE_DIR}/libthermo/math_utils.h
 )
 
