@@ -2,6 +2,7 @@
 #include "libthermo/polynomial_gas.h"
 
 #include "xtensor/xtensor.hpp"
+#include "xtensor/xio.hpp"
 
 #include <iostream>
 #include <chrono>
@@ -297,12 +298,11 @@ namespace libthermo
         std::cout << "Gamma -> " << timeit(bench_Gamma, ntimes) << " ns" << std::endl;
         std::cout << "H -> " << timeit(bench_H, ntimes) << " ns" << std::endl;
         std::cout << "Phi -> " << timeit(bench_Phi, ntimes) << " ns" << std::endl;
-        /*
+
         // std::cout << "R -> " << timeit(bench_R, ntimes) << " ns" << std::endl;
         std::cout << "PR -> " << timeit(bench_PR, ntimes) << " ns" << std::endl;
         std::cout << "EffPoly -> " << timeit(bench_EffPoly, ntimes) << " ns" << std::endl;
-        std::cout << "Pout -> " << timeit(bench_pout, ntimes) << " ns" << std::endl;
-        */
+        // std::cout << "Pout -> " << timeit(bench_pout, ntimes) << " ns" << std::endl;
     }
 }
 
@@ -310,6 +310,7 @@ int main()
 {
     using namespace libthermo;
     double Tref = 288.15;
+    xt::xtensor<double, 1> Tref_xt = { 288.15 };
     {
         IdealGas gas(287.05287, 1004.685045);
 
@@ -331,7 +332,7 @@ int main()
     }
 
     {
-        PolyGas gas(287.05287, 1004.685045);
+        PolyGas gas(287.05287);
 
         std::cout << "\n" << "Reference values" << std::endl;
         std::cout << "Cp -> " << gas.Cp(Tref) << std::endl;
@@ -339,6 +340,11 @@ int main()
         std::cout << "H -> " << gas.H(Tref) << std::endl;
         std::cout << "Phi -> " << gas.Phi(Tref) << std::endl;
 
+        std::cout << "(tensors)" << std::endl;
+        std::cout << "Cp -> " << gas.Cp(Tref_xt) << std::endl;
+        std::cout << "Gamma -> " << gas.Gamma(Tref_xt) << std::endl;
+        std::cout << "H -> " << gas.H(Tref_xt) << std::endl;
+        std::cout << "Phi -> " << gas.Phi(Tref_xt) << std::endl;
 
         //std::cout << "\n" << "Single value tests" << std::endl;
         //benchmark_single_value(gas, 1000000, 100);
@@ -350,7 +356,7 @@ int main()
         benchmark_loop(gas, 1000000, 1000);
 
         std::cout << "\nVector tests" << std::endl;
-        benchmark_vector(gas, 1000000, 5000);
+        benchmark_vector(gas, 1000000, 1000);
 
     }
     // std::cout << XSIMD_X86_INSTR_SET << std::endl;
