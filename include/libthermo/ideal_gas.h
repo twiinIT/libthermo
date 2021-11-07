@@ -7,32 +7,6 @@
 #ifndef LIBTHERMO_IDEAL_GAS_H
 #define LIBTHERMO_IDEAL_GAS_H
 
-#ifdef LIBTHERMO_USE_XTENSOR
-#include "xtensor/xcontainer.hpp"
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xfunction.hpp"
-
-#define IS_NOT_XTENSOR \
-    std::enable_if_t<!xt::detail::is_container<T>::value, int> = 0
-#define IS_XTENSOR \
-    std::enable_if_t<xt::detail::is_container<T>::value, int> = 0
-#else
-#include <type_traits>
-
-namespace
-{
-    template<class T>
-    struct is_tensor : std::false_type {};
-
-    template<class T>
-    struct is_not_tensor : std::true_type {};
-}
-#define IS_NOT_XTENSOR \
-    std::enable_if_t<is_not_tensor<T>::value, int> = 0
-#define IS_XTENSOR \
-    std::enable_if_t<is_tensor<T>::value, int> = 0
-#endif
-
 #include "libthermo/gas.h"
 
 #include <string>
@@ -118,7 +92,8 @@ namespace libthermo
     template<class T, IS_XTENSOR>
     auto IdealGas::Cp(const T& t) const
     {
-        return xt::full_like(t, cp);
+        return xt::broadcast(cp, t.shape());
+        //return xt::full_like(t, cp);
     }
 #endif
 

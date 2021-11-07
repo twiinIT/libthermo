@@ -5,6 +5,7 @@
 // The full license is in the file LICENSE, distributed with this software.
 
 #include "libthermo/ideal_gas.h"
+#include "libthermo/real_gas.h"
 
 #include <pybind11/pybind11.h>
 #define FORCE_IMPORT_ARRAY
@@ -44,6 +45,7 @@ PYBIND11_MODULE(pythermo, m)
   //.def("gamma", &IdealGas::Gamma<double>, "Specific heat ratio", py::arg("temperature"))
   .def("specific_heat_pressure", &IdealGas::SpecificHeatPressure<double>, "Specific heat pressure", py::arg("temperature"))
   .def("cp", &IdealGas::Cp<double>, "Specific heat pressure", py::arg("temperature"))
+  .def("cp", &IdealGas::Cp<array_type>, "Specific heat pressure", py::arg("temperature"))
   .def("pressure_ratio", &IdealGas::PressureRatio<double>, "Pressure Ratio", py::arg("initiale temperature"), py::arg("finale temperature"), py::arg("polytropic efficiency"))
   //.def("pr", &IdealGas::PR<double>, "Pressure Ratio", py::arg("initiale temperature"), py::arg("finale temperature"), py::arg("polytropic efficiency"))
   .def("pr", &IdealGas::PR<array_type, array_type>, "Pressure Ratio", py::arg("initiale temperature"), py::arg("finale temperature"), py::arg("polytropic efficiency"))
@@ -55,5 +57,29 @@ PYBIND11_MODULE(pythermo, m)
   .def("polytropic_efficiency", &IdealGas::PolytropicEfficiency<double>, "Polytropic efficiency", 
         py::arg("initial pressure"), py::arg("initial temperature"), py::arg("final pressure"), py::arg("final temperature"));
 
+  py::class_<RealGas> (m, "RealGas")
+  .def(py::init<double>())
+  .def("constant", &RealGas::Constant<double>, "Gas constant")
+  .def("r", &RealGas::R<double>, "Gas constant")
+  .def("enthalpy", &RealGas::Enthalpy<double>, "Enthalpy", py::arg("temperature"))
+  .def("h", &RealGas::H<double>, "Enthalpy", py::arg("temperature"))
+  .def("entropy", &RealGas::Entropy<double>, "Entropy", py::arg("temperature"))
+  .def("phi", &RealGas::Phi<double>, "Entropy", py::arg("temperature"))
+  .def("phi", &RealGas::Phi<array_type>, "Entropy", py::arg("temperature"))
+  //.def("specific_heat_ratio", &IdealGas::SpecificHeatRatio<double>, "Specific heat ratio", py::arg("temperature"))
+  //.def("gamma", &IdealGas::Gamma<double>, "Specific heat ratio", py::arg("temperature"))
+  .def("specific_heat_pressure", &RealGas::SpecificHeatPressure<double>, "Specific heat pressure", py::arg("temperature"))
+  .def("cp", &RealGas::Cp<double>, "Specific heat pressure", py::arg("temperature"))
+  .def("cp", &RealGas::Cp<array_type>, "Specific heat pressure", py::arg("temperature"))
+  .def("pressure_ratio", &RealGas::PressureRatio<double>, "Pressure Ratio", py::arg("initiale temperature"), py::arg("finale temperature"), py::arg("polytropic efficiency"))
+  //.def("pr", &RealGas::PR<double>, "Pressure Ratio", py::arg("initiale temperature"), py::arg("finale temperature"), py::arg("polytropic efficiency"))
+  .def("pr", &RealGas::PR<array_type, array_type>, "Pressure Ratio", py::arg("initiale temperature"), py::arg("finale temperature"), py::arg("polytropic efficiency"))
+  .def("pr", &RealGas::PR<array_type, double>, "Pressure Ratio", py::arg("initiale temperature"), py::arg("finale temperature"), py::arg("polytropic efficiency"))
+  .def("eff_poly", &RealGas::EffPoly<double>, "Polytropic efficiency", 
+        py::arg("initial pressure"), py::arg("initial temperature"), py::arg("final pressure"), py::arg("final temperature"))
+  .def("eff_poly", &RealGas::PolytropicEfficiency<array_type>, "Polytropic efficiency", 
+        py::arg("initial pressure"), py::arg("initial temperature"), py::arg("final pressure"), py::arg("final temperature"))
+  .def("polytropic_efficiency", &RealGas::PolytropicEfficiency<double>, "Polytropic efficiency", 
+        py::arg("initial pressure"), py::arg("initial temperature"), py::arg("final pressure"), py::arg("final temperature"));
 }
 

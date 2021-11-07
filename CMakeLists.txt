@@ -37,6 +37,7 @@ set(LIBTHERMO_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(thermo_headers
     ${LIBTHERMO_INCLUDE_DIR}/libthermo/gas.h
     ${LIBTHERMO_INCLUDE_DIR}/libthermo/ideal_gas.h
+    ${LIBTHERMO_INCLUDE_DIR}/libthermo/real_gas.h
     ${LIBTHERMO_INCLUDE_DIR}/libthermo/math_utils.h
 )
 
