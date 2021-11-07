@@ -10,10 +10,10 @@ cmake_policy(VERSION 3.9)
 
 project (libthermo)
 
+# Build options
 option(BUILD_TESTS "Enable C++ tests for libthermo" OFF)
 option(BUILD_BENCHS "Enable C++ benchmarks for libthermo" OFF)
-
-find_package(xtensor REQUIRED)
+option(LIBTHERMO_USE_XTENSOR "Enable C++ xtensor for libthermo" OFF)
 
 # Set installation directories (CMAKE_INSTALL_INCLUDEDIR, CMAKE_INSTALL_BINDIR, CMAKE_INSTALL_LIBDIR)
 include(GNUInstallDirs)
@@ -49,7 +49,14 @@ target_include_directories(
         $<BUILD_INTERFACE:${LIBTHERMO_INCLUDE_DIR}>
         $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(libthermo INTERFACE xtensor)
+
+if (LIBTHERMO_USE_XTENSOR)
+    find_package(xtensor REQUIRED)
+    target_compile_definitions(libthermo
+                            INTERFACE
+                            LIBTHERMO_USE_XTENSOR)
+    target_link_libraries(libthermo INTERFACE xtensor)
+endif ()
 
 install(TARGETS libthermo 
         EXPORT ${PROJECT_NAME}-targets)
