@@ -17,11 +17,18 @@ namespace libthermo
     template<int D>
     struct poly
     {
-        template<class E, class It>
+        template<class E, class It, std::enable_if_t<!xt::is_xexpression<E>::value, int> = 0>
         static inline auto polyval(E&& x, It coeff)
         {
             auto c = coeff++;
             return *c + x * poly<D-1>::polyval(x, coeff);
+        };
+
+        template<class E, class It, std::enable_if_t<xt::is_xexpression<E>::value, int> = 0>
+        static inline auto polyval(E&& x, It coeff)
+        {
+            auto c = coeff++;
+            return xt::fma(x, poly<D-1>::polyval(x, coeff), *c);
         };
     };
 
