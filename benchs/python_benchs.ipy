@@ -3,7 +3,7 @@ g = IdealGas(287, 1004)
 
 import numpy as np
 
-N = int(1e6)
+N = int(1e8)
 t1 = np.repeat(273., N)
 t2 = np.repeat(500., N)
 p1 = np.repeat(101325., N)
@@ -51,6 +51,50 @@ class NumpyIdealGas:
 
     def t_from_h(self, h):
         return h / self._cp
+
+
+class NumpyRealGas:
+
+    cp_coeff = [ 2.35822e-20,  -1.79613e-16, 4.70972e-13, -3.3094e-10,
+                -6.27984e-07, 0.00123785,   -0.521742,   1068.43 ]
+    h_coeff = [ 2.35822e-20 / 8., -1.79613e-16 / 7., 4.70972e-13 / 6.,
+                -3.3094e-10 / 5., -6.27984e-07 / 4., 0.00123785 / 3.,
+                -0.521742 / 2.,   1068.43,           0. ]
+    phi_coeff = [ 2.35822e-20 / 7., -1.79613e-16 / 6.,
+                4.70972e-13 / 5.,
+                -3.3094e-10 / 4.,
+                -6.27984e-07 / 3.,
+                0.00123785 / 2.,
+                -0.521742,
+                0.,
+                1068.43 ]
+
+    def __init__(self, r: float):
+        self._r = r
+
+    def r(self, t):
+        return np.full_like(t, self._r)
+
+    def cp(self, t):
+        return np.polyval(self.cp_coeff, t)
+
+    def h(self, t):
+        return np.polyval(self.h_coeff, t)
+    
+    def gamma(self, t):
+        return self.cp(t) / (self.cp(t) - self._r)
+
+    def phi(self, t):
+        return np.polyval(self.phi_coeff[:-1], t) + self.phi_coeff[-1] * np.log(t)
+
+    def dphi(self, t1, t2):
+        return (np.polyval(self.phi_coeff[:-1], t2) - np.polyval(self.phi_coeff[:-1], t1)) + self.phi_coeff[-1] * np.log(t2 / t1)
+
+    def pr(self, t1, t2, eff_poly):
+        return np.exp(self.dphi(t1, t2) * eff_poly / self._r)
+
+    def eff_poly(self, p1, t1, p2, t2):
+        return self._r * np.log(p2 / p1) / self.dphi(t1, t2)
 
 
 gpy = NumpyIdealGas(287, 1004)

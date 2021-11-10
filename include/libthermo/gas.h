@@ -47,7 +47,7 @@ namespace libthermo
 
         using derived_gas_type = G;
 
-        inline const std::string Name() const { return "Gas"; };
+        inline const std::string& name() const { return m_name; };
 
         /// Proxy method to compute the specific heat ratio.
         template<class T>
@@ -70,7 +70,7 @@ namespace libthermo
         auto Constant() const { return derived_gas().template R<T>(); };
         
         /// Proxy method to get the pressure ratio from initiale and finale temps, and polytropic efficiency.
-        template<class T, class E>
+        template<class T, class E = T>
         auto PressureRatio(const T& t1, const T& t2, const E& eff_poly) const { return derived_gas().PR(t1, t2, eff_poly); };
         
         /// Proxy method to get the polytropic efficiency of a transformation between initial and final pressure and temps.
@@ -81,11 +81,20 @@ namespace libthermo
     protected:
 
         Gas() = default;
+        Gas(const std::string& name_);
         ~Gas() = default;
 
         const derived_gas_type& derived_gas() const noexcept;
         derived_gas_type& derived_gas() noexcept;
+
+        const std::string m_name = "Gas";
     };
+
+    template <class G>
+    inline Gas<G>::Gas(const std::string& name_)
+    : m_name(name_)
+    {
+    }
 
     template <class G>
     inline auto Gas<G>::derived_gas() const noexcept

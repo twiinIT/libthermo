@@ -13,6 +13,7 @@ project (libthermo)
 # Build options
 option(BUILD_TESTS "Enable C++ tests for libthermo" OFF)
 option(BUILD_BENCHS "Enable C++ benchmarks for libthermo" OFF)
+option(BUILD_PY "Build PYthon bindings of libthermo" OFF)
 option(LIBTHERMO_USE_XTENSOR "Enable C++ xtensor for libthermo" OFF)
 
 # Set installation directories (CMAKE_INSTALL_INCLUDEDIR, CMAKE_INSTALL_BINDIR, CMAKE_INSTALL_LIBDIR)
@@ -42,7 +43,7 @@ set(thermo_headers
 )
 
 add_library(libthermo INTERFACE ${libthermo_headers})
-target_compile_features(libthermo INTERFACE cxx_std_14)
+target_compile_features(libthermo INTERFACE cxx_std_17)
 
 target_include_directories(
     libthermo

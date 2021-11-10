@@ -18,10 +18,18 @@ message(STATUS "Found pybind11 v${pybind11_VERSION}: ${pybind11_INCLUDE_DIRS}")
 find_package(NumPy REQUIRED)
 message(STATUS "Found NumPy: v${NUMPY_VERSION} ${NUMPY_INCLUDE_DIRS}")
 
+# -- Set the Python site-package installation directory
+find_package(PythonInterp)
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; import os;print(get_python_lib())"
+                OUTPUT_VARIABLE PY_SP_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+set(SP_DIR "${PY_SP_DIR}" CACHE PATH "Site-package directory")
+message("-- CMake install prefix: " ${CMAKE_INSTALL_PREFIX})
+message("  -> site-packages: " ${SP_DIR})
 
 pybind11_add_module(pythermo ideal.cpp)
 target_include_directories(pythermo PUBLIC ${NUMPY_INCLUDE_DIRS})
 target_link_libraries(pythermo PUBLIC libthermo xtensor-python tbb)
 
 target_compile_options(pythermo PUBLIC "-march=native")
-#install(TARGETS pythermo DESTINATION ${SP_DIR})
+install(TARGETS pythermo DESTINATION ${SP_DIR})

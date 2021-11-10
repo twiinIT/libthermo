@@ -18,7 +18,8 @@ namespace libthermo
     {
     public:
         IdealGas(double r_, double cp_)
-            : r(r_)
+            : Gas<IdealGas>("IdealGas")
+            , r(r_)
             , cp(cp_)
             , gamma(cp_ / (cp_ - r_))
         {};
