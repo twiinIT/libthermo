@@ -12,25 +12,25 @@
 #ifdef LIBTHERMO_USE_XTENSOR
 #include "xtensor/xexpression.hpp"
 
-#define IS_NOT_XEXPRESSION \
-    std::enable_if_t<!xt::is_xexpression<E>::value, int> = 0
-#define IS_XEXPRESSION \
-    std::enable_if_t<xt::is_xexpression<E>::value, int> = 0
+#define IS_NOT_XEXPRESSION std::enable_if_t<!xt::is_xexpression<E>::value, int> = 0
+#define IS_XEXPRESSION std::enable_if_t<xt::is_xexpression<E>::value, int> = 0
 #else
 #include <type_traits>
 
 namespace
 {
-    template<class T>
-    struct is_xexpression : std::false_type {};
+    template <class T>
+    struct is_xexpression : std::false_type
+    {
+    };
 
-    template<class T>
-    struct is_not_xexpression : std::true_type {};
+    template <class T>
+    struct is_not_xexpression : std::true_type
+    {
+    };
 }
-#define IS_NOT_XEXPRESSION \
-    std::enable_if_t<is_not_tensor<E>::value, int> = 0
-#define IS_XEXPRESSION \
-    std::enable_if_t<is_tensor<E>::value, int> = 0
+#define IS_NOT_XEXPRESSION std::enable_if_t<is_not_tensor<E>::value, int> = 0
+#define IS_XEXPRESSION std::enable_if_t<is_tensor<E>::value, int> = 0
 #endif
 
 #include <string>
@@ -41,19 +41,19 @@ namespace libthermo
     template <int D>
     struct poly
     {
-        template<class E, class It, IS_NOT_XEXPRESSION>
+        template <class E, class It, IS_NOT_XEXPRESSION>
         static inline auto polyval(E&& x, It coeff)
         {
             auto c = coeff++;
-            return std::fma(x, poly<D-1>::polyval(x, coeff), *c);
+            return std::fma(x, poly<D - 1>::polyval(x, coeff), *c);
         };
 
 #ifdef LIBTHERMO_USE_XTENSOR
-        template<class E, class It, IS_XEXPRESSION>
+        template <class E, class It, IS_XEXPRESSION>
         static inline auto polyval(E&& x, It coeff)
         {
             auto c = coeff++;
-            return xt::fma(x, poly<D-1>::polyval(x, coeff), *c);
+            return xt::fma(x, poly<D - 1>::polyval(x, coeff), *c);
         };
 #endif
     };

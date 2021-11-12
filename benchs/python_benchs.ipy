@@ -36,7 +36,7 @@ class NumpyIdealGas:
 
     def h(self, t):
         return self._cp * t
-    
+
     def gamma(self, t):
         return np.full_like(t, self._gamma)
 
@@ -80,7 +80,7 @@ class NumpyRealGas:
 
     def h(self, t):
         return np.polyval(self.h_coeff, t)
-    
+
     def gamma(self, t):
         return self.cp(t) / (self.cp(t) - self._r)
 

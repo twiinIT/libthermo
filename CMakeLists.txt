@@ -60,7 +60,7 @@ if (LIBTHERMO_USE_XTENSOR)
     target_link_libraries(libthermo INTERFACE xtensor)
 endif ()
 
-install(TARGETS libthermo 
+install(TARGETS libthermo
         EXPORT ${PROJECT_NAME}-targets)
 
 install(FILES ${libthermo_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libthermo)
@@ -88,7 +88,7 @@ configure_package_config_file(${PROJECT_NAME}Config.cmake.in
                               INSTALL_DESTINATION ${ConfigFileInstallDir})
 
 # Installation
-install(EXPORT ${PROJECT_NAME}-targets 
+install(EXPORT ${PROJECT_NAME}-targets
         FILE ${PROJECT_NAME}Targets.cmake
         DESTINATION ${ConfigFileInstallDir})
 
