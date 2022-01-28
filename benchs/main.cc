@@ -20,7 +20,7 @@
 
 namespace fs = std::filesystem;
 
-namespace libthermo
+namespace thermo
 {
     nlohmann::json timeit(std::function<void()> f, std::size_t size, long repeat, long number)
     {
@@ -72,10 +72,15 @@ namespace libthermo
     void benchmark_single_value(G&& gas, std::size_t size, long ntimes)
     {
         double res;
+        srand(time(nullptr));
         double t1 = rand() % 30 + 273.15;
         double t2 = rand() % 30 + 350.;
         double p1 = rand() % 30 + 101325.;
         double p2 = rand() % 30 + 500000.;
+        double h = rand() % 30 + 273000.;
+        double phi = rand() % (50 + 1) + 6000.;
+        double pr = (rand() % 10) / 1000. + 0.75;
+        std::cout << phi << std::endl;
 
         auto bench_Cp = [&](const long& ntimes) -> void {
             for (long i = 0; i < ntimes; i++)
@@ -122,7 +127,7 @@ namespace libthermo
             {
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                    res = gas.template R<double>();
+                    res = gas.R();
                 }
             };
         };
@@ -133,6 +138,36 @@ namespace libthermo
                 for (std::size_t i = 0; i < size; ++i)
                 {
                     res = gas.PR(t1, t2, 0.82);
+                }
+            };
+        };
+
+        auto bench_TFromH = [&](const long& ntimes) -> void {
+            for (long i = 0; i < ntimes; i++)
+            {
+                for (std::size_t i = 0; i < size; ++i)
+                {
+                    res = gas.TFromH(h);
+                }
+            };
+        };
+
+        auto bench_TFromPhi = [&](const long& ntimes) -> void {
+            for (long i = 0; i < ntimes; i++)
+            {
+                for (std::size_t i = 0; i < size; ++i)
+                {
+                    res = gas.TFromPhi(phi);
+                }
+            };
+        };
+
+        auto bench_TFromPR = [&](const long& ntimes) -> void {
+            for (long i = 0; i < ntimes; i++)
+            {
+                for (std::size_t i = 0; i < size; ++i)
+                {
+                    res = gas.TFromPR(pr, t1, 0.82);
                 }
             };
         };
@@ -172,6 +207,9 @@ namespace libthermo
         std::cout << "Phi -> " << timeit(bench_Phi, ntimes) << " ns" << std::endl;
         std::cout << "R -> " << timeit(bench_R, ntimes * 10) << " ns" << std::endl;
         std::cout << "PR -> " << timeit(bench_PR, ntimes) << " ns" << std::endl;
+        std::cout << "TFromH -> " << timeit(bench_TFromH, ntimes) << " ns" << std::endl;
+        std::cout << "TFromPhi -> " << timeit(bench_TFromPhi, ntimes) << " ns" << std::endl;
+        std::cout << "TFromPR -> " << timeit(bench_TFromPR, ntimes) << " ns" << std::endl;
         std::cout << "EffPoly -> " << timeit(bench_EffPoly, ntimes) << " ns" << std::endl;
         std::cout << "Pout -> " << timeit(bench_pout, ntimes) << " ns" << std::endl;
     }
@@ -233,7 +271,7 @@ namespace libthermo
             {
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                    res[i] = gas.template R<double>();
+                    res[i] = gas.R();
                 }
             };
         };
@@ -258,7 +296,7 @@ namespace libthermo
             };
         };
 
-        auto bench_pout = [&]() -> void {
+        auto bench_Pout = [&]() -> void {
             for (long i = 0; i < repeat; i++)
             {
                 for (std::size_t i = 0; i < size; ++i)
@@ -273,7 +311,7 @@ namespace libthermo
         j["N"] = size;
 
 #define TIME_F(NAME)                                                                               \
-    j[#NAME] = timeit(bench_ #NAME, size, repeat, number);                                         \
+    j[#NAME] = timeit(bench_##NAME, size, repeat, number);                                         \
     std::cout << #NAME << " --> " << j[#NAME] << " ns";
 
 
@@ -390,12 +428,12 @@ namespace libthermo
         out_file.close();
     }
 #endif
-}  // namespace libthermo
+}  // namespace thermo
 
 int
 main()
 {
-    using namespace libthermo;
+    using namespace thermo;
     double Tref = 288.15;
     {
         IdealGas gas(287.05287, 1004.685045);
@@ -406,18 +444,23 @@ main()
         std::cout << "Gamma -> " << gas.Gamma(Tref) << std::endl;
         std::cout << "H -> " << gas.H(Tref) << std::endl;
         std::cout << "Phi -> " << gas.Phi(Tref) << std::endl;
+        std::cout << "PR -> " << gas.PR(Tref, 450., 0.82) << std::endl;
+        std::cout << "TFromH -> " << gas.TFromH(gas.H(Tref)) << std::endl;
+        std::cout << "TFromPhi -> " << gas.TFromPhi(gas.Phi(Tref)) << std::endl;
+        std::cout << "TFromPR -> " << gas.TFromPR(gas.PR(Tref, 450., 0.82), Tref, 0.82)
+                  << std::endl;
+
+        std::cout << "\nSingle value tests" << std::endl;
+        // benchmark_single_value(gas, 1000000, 50);
         /*
-                std::cout << "\nSingle value tests" << std::endl;
-                benchmark_single_value(gas, 1000000, 50);
+                        std::cout << "\nLoop tests" << std::endl;
+                        benchmark_loop(gas, 1000000, 500);
 
-                std::cout << "\nLoop tests" << std::endl;
-                benchmark_loop(gas, 1000000, 500);
-
-        #ifdef LIBTHERMO_USE_XTENSOR
-                std::cout << "\nVector tests" << std::endl;
-                benchmark_vector(gas, 1000000, 5000);
-        #endif
-        */
+                #ifdef LIBTHERMO_USE_XTENSOR
+                        std::cout << "\nVector tests" << std::endl;
+                        benchmark_vector(gas, 1000000, 5000);
+                #endif
+                */
     }
 
     {
@@ -429,13 +472,18 @@ main()
         std::cout << "Gamma -> " << gas.Gamma(Tref) << std::endl;
         std::cout << "H -> " << gas.H(Tref) << std::endl;
         std::cout << "Phi -> " << gas.Phi(Tref) << std::endl;
+        std::cout << "PR -> " << gas.PR(Tref, 450., 0.82) << std::endl;
+        std::cout << "TFromH -> " << gas.TFromH(gas.H(Tref)) << std::endl;
+        std::cout << "TFromPhi -> " << gas.TFromPhi(gas.Phi(Tref)) << std::endl;
+        std::cout << "TFromPR -> " << gas.TFromPR(gas.PR(Tref, 450., 0.82), Tref, 0.82)
+                  << std::endl;
+
+        std::cout << "\nSingle value tests" << std::endl;
+        benchmark_single_value(gas, 100000, 50);
         /*
-                std::cout << "\nSingle value tests" << std::endl;
-                benchmark_single_value(gas, 1000000, 50);
         std::cout << "\nLoop tests" << std::endl;
         benchmark_loop(gas, 10, 10000000);
         benchmark_loop(gas, 100, 1000000);
-        */
 
 #ifdef LIBTHERMO_USE_XTENSOR
         std::cout << "\nVector tests 1M" << std::endl;
@@ -444,6 +492,7 @@ main()
         std::cout << "\nVector tests 1k" << std::endl;
         benchmark_vector(gas, 10000, 1000, 100);
 #endif
+*/
     }
     // std::cout << XSIMD_X86_INSTR_SET << std::endl;
 

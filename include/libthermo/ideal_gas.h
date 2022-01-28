@@ -8,154 +8,197 @@
 #define LIBTHERMO_IDEAL_GAS_H
 
 #include "libthermo/gas.h"
+#include "libthermo/math_utils.h"
 
 #include <string>
 
 
-namespace libthermo
+namespace thermo
 {
     class IdealGas : public Gas<IdealGas>
     {
     public:
         IdealGas(double r_, double cp_)
             : Gas<IdealGas>("IdealGas")
-            , r(r_)
-            , cp(cp_)
-            , gamma(cp_ / (cp_ - r_))
-        {};
+            , m_r(r_)
+            , m_cp(cp_)
+            , m_gamma(cp_ / (cp_ - r_)){};
 
-        template<class T, IS_NOT_XTENSOR>
+        template <class T, IS_NOT_XTENSOR>
         auto Gamma(const T& t) const;
 
-        template<class T, IS_XTENSOR>
+        template <class T, IS_XTENSOR>
         auto Gamma(const T& t) const;
 
-        template<class T, IS_NOT_XTENSOR>
+        template <class T, IS_NOT_XTENSOR>
         auto Cp(const T& = 0.) const;
 
-        template<class T, IS_XTENSOR>
+        template <class T, IS_XTENSOR>
         auto Cp(const T& = 0.) const;
 
-        template<class T, IS_NOT_XTENSOR>
-        auto Phi(const T&t) const;
+        template <class T, IS_NOT_XTENSOR>
+        auto Phi(const T& t) const;
 
-        template<class T, IS_XTENSOR>
-        auto Phi(const T&t) const;
+        template <class T, IS_XTENSOR>
+        auto Phi(const T& t) const;
 
-        template<class T, IS_NOT_XTENSOR>
+        template <class T, IS_NOT_XTENSOR>
         auto PR(const T& t1, const T& t2, const T& eff_poly) const;
 
-        template<class T, class E, IS_XTENSOR>
+        template <class T, class E, IS_XTENSOR>
         auto PR(const T& t1, const T& t2, const E& eff_poly) const;
 
-        template<class T, IS_NOT_XTENSOR>
+        template <class T, IS_NOT_XTENSOR>
+        auto Tau(const T& p1, const T& p2, const T& eff_poly) const;
+
+        template <class T, class E, IS_XTENSOR>
+        auto Tau(const T& p1, const T& p2, const E& eff_poly) const;
+
+        template <class T, IS_NOT_XTENSOR>
         auto EffPoly(const T& p1, const T& t1, const T& p2, const T& t2) const;
 
-        template<class T, IS_XTENSOR>
+        template <class T, IS_XTENSOR>
         auto EffPoly(const T& p1, const T& t1, const T& p2, const T& t2) const;
 
-        template<class T>
+        template <class T>
         auto H(const T& t) const;
 
-        template<class T>
-        auto R() const;
+        double R() const;
 
-        template<class T>
+        double StaticT(const double tt, const double mach) const;
+
+        template <class T>
+        auto TFromPR(const T& pr, const T& t1, const T& eff_poly) const;
+
+        template <class T>
         auto TFromH(const T& h) const;
 
+        template <class T>
+        auto TFromPhi(const T& h) const;
+
     protected:
-        double r, cp, gamma;
+        double m_r, m_cp, m_gamma;
     };
 
-    template<class T, IS_NOT_XTENSOR>
+    template <class T, IS_NOT_XTENSOR>
     auto IdealGas::Gamma(const T&) const
     {
-        return gamma;
+        return m_gamma;
     }
 
 #ifdef LIBTHERMO_USE_XTENSOR
-    template<class T, IS_XTENSOR>
+    template <class T, IS_XTENSOR>
     auto IdealGas::Gamma(const T& t) const
     {
-        //return xt::full_like(t, gamma);
-        //return xt::ones<double>(t.shape()) * gamma;
-        return xt::broadcast(gamma, t.shape());
+        // return xt::full_like(t, m_gamma);
+        // return xt::ones<double>(t.shape()) * m_gamma;
+        return xt::broadcast(m_gamma, t.shape());
     }
 #endif
 
-    template<class T, IS_NOT_XTENSOR>
+    template <class T, IS_NOT_XTENSOR>
     auto IdealGas::Cp(const T&) const
     {
-        return cp;
+        return m_cp;
     }
 
 #ifdef LIBTHERMO_USE_XTENSOR
-    template<class T, IS_XTENSOR>
+    template <class T, IS_XTENSOR>
     auto IdealGas::Cp(const T& t) const
     {
-        return xt::broadcast(cp, t.shape());
-        //return xt::full_like(t, cp);
+        return xt::broadcast(m_cp, t.shape());
+        // return xt::full_like(t, m_cp);
     }
 #endif
 
-    template<class T, IS_NOT_XTENSOR>
+    template <class T, IS_NOT_XTENSOR>
     auto IdealGas::Phi(const T& t) const
     {
-        return cp * std::log(t);
+        return m_cp * std::log(t);
     }
 
 #ifdef LIBTHERMO_USE_XTENSOR
-    template<class T, IS_XTENSOR>
+    template <class T, IS_XTENSOR>
     auto IdealGas::Phi(const T& t) const
     {
-        return cp * xt::log(t);
+        return m_cp * xt::log(t);
     }
 #endif
 
-    template<class T, IS_NOT_XTENSOR>
+    template <class T, IS_NOT_XTENSOR>
     auto IdealGas::PR(const T& t1, const T& t2, const T& eff_poly) const
-    { 
-        return std::exp(std::log(t2 / t1) * eff_poly * cp / r);
+    {
+        return std::exp(std::log(t2 / t1) * eff_poly * m_cp / m_r);
     }
 
 #ifdef LIBTHERMO_USE_XTENSOR
-    template<class T, class E, IS_XTENSOR>
+    template <class T, class E, IS_XTENSOR>
     auto IdealGas::PR(const T& t1, const T& t2, const E& eff_poly) const
-    { 
-        return xt::exp(xt::log(t2 / t1) * eff_poly * cp / r);
+    {
+        return xt::exp(xt::log(t2 / t1) * eff_poly * m_cp / m_r);
     }
 #endif
 
-    template<class T, IS_NOT_XTENSOR>
-    auto IdealGas::EffPoly(const T& p1, const T& t1, const T& p2, const T& t2) const
+    template <class T, IS_NOT_XTENSOR>
+    auto IdealGas::Tau(const T& p1, const T& p2, const T& eff_poly) const
     {
-        return R<T>() * cp * log(p2 / p1) / std::log(t2 / t1);
+        return std::exp(std::log(p2 / p1) * m_r / (eff_poly * m_cp));
     }
 
 #ifdef LIBTHERMO_USE_XTENSOR
-    template<class T, IS_XTENSOR>
-    auto IdealGas::EffPoly(const T& p1, const T& t1, const T& p2, const T& t2) const
+    template <class T, class E, IS_XTENSOR>
+    auto IdealGas::Tau(const T& p1, const T& p2, const E& eff_poly) const
     {
-        return R<double>() * cp * xt::log(p2 / p1) / xt::log(t2 / t1);
+        return xt::exp(xt::log(p2 / p1) * m_r / (eff_poly * m_cp));
     }
 #endif
 
-    template<class T>
+    template <class T, IS_NOT_XTENSOR>
+    auto IdealGas::EffPoly(const T& p1, const T& t1, const T& p2, const T& t2) const
+    {
+        return R() / m_cp * log(p2 / p1) / std::log(t2 / t1);
+    }
+
+#ifdef LIBTHERMO_USE_XTENSOR
+    template <class T, IS_XTENSOR>
+    auto IdealGas::EffPoly(const T& p1, const T& t1, const T& p2, const T& t2) const
+    {
+        return R() / m_cp * xt::log(p2 / p1) / xt::log(t2 / t1);
+    }
+#endif
+
+    template <class T>
     auto IdealGas::H(const T& t) const
     {
-        return cp * t;
+        return m_cp * t;
     }
 
-    template<class T>
-    auto IdealGas::R() const
+    inline double IdealGas::R() const
     {
-        return r; 
+        return m_r;
     }
 
-    template<class T>
+    inline double IdealGas::StaticT(const double tt, const double mach) const
+    {
+        return tt / (1 + 0.5 * (m_cp / (m_cp - m_r) - 1.) * std::pow(mach, 2.));
+    }
+
+    template <class T>
+    auto IdealGas::TFromPR(const T& pr, const T& t1, const T& eff_poly) const
+    {
+        return t1 * std::pow(pr, m_r / (m_cp * eff_poly));
+    }
+
+    template <class T>
     auto IdealGas::TFromH(const T& h) const
-    { 
-        return h / cp; 
+    {
+        return h / m_cp;
+    }
+
+    template <class T>
+    auto IdealGas::TFromPhi(const T& phi) const
+    {
+        return std::exp(phi / m_cp);
     }
 }
 #endif

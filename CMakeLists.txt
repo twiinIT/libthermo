@@ -35,7 +35,7 @@ include_directories(${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR})
 
 set(LIBTHERMO_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-set(thermo_headers
+set(libthermo_headers
     ${LIBTHERMO_INCLUDE_DIR}/libthermo/gas.h
     ${LIBTHERMO_INCLUDE_DIR}/libthermo/ideal_gas.h
     ${LIBTHERMO_INCLUDE_DIR}/libthermo/real_gas.h
@@ -77,6 +77,7 @@ if(BUILD_PY)
     add_subdirectory(pythermo)
 endif()
 
+#add_subdirectory(test_pygas)
 
 # Configuration
 # =============

@@ -11,49 +11,50 @@
 
 #ifdef LIBTHERMO_USE_XTENSOR
 #include "xtensor/xexpression.hpp"
-
-#define IS_NOT_XEXPRESSION \
-    std::enable_if_t<!xt::is_xexpression<E>::value, int> = 0
-#define IS_XEXPRESSION \
-    std::enable_if_t<xt::is_xexpression<E>::value, int> = 0
+#include "xsimd/xsimd.hpp"
+#define IS_NOT_XEXPRESSION std::enable_if_t<!xt::is_xexpression<E>::value, int> = 0
+#define IS_XEXPRESSION std::enable_if_t<xt::is_xexpression<E>::value, int> = 0
 #else
+#include <cmath>
 #include <type_traits>
 
 namespace
 {
-    template<class T>
-    struct is_xexpression : std::false_type {};
+    template <class T>
+    struct is_xexpression : std::false_type
+    {
+    };
 
-    template<class T>
-    struct is_not_xexpression : std::true_type {};
+    template <class T>
+    struct is_not_xexpression : std::true_type
+    {
+    };
 }
-#define IS_NOT_XEXPRESSION \
-    std::enable_if_t<is_not_tensor<E>::value, int> = 0
-#define IS_XEXPRESSION \
-    std::enable_if_t<is_tensor<E>::value, int> = 0
+#define IS_NOT_XEXPRESSION std::enable_if_t<is_not_tensor<E>::value, int> = 0
+#define IS_XEXPRESSION std::enable_if_t<is_tensor<E>::value, int> = 0
 #endif
 
 #include <string>
 
 
-namespace libthermo
+namespace thermo
 {
     template <int D>
     struct poly
     {
-        template<class E, class It, IS_NOT_XEXPRESSION>
+        template <class E, class It, IS_NOT_XEXPRESSION>
         static inline auto polyval(E&& x, It coeff)
         {
             auto c = coeff++;
-            return std::fma(x, poly<D-1>::polyval(x, coeff), *c);
+            return std::fma(x, poly<D - 1>::polyval(x, coeff), *c);
         };
 
 #ifdef LIBTHERMO_USE_XTENSOR
-        template<class E, class It, IS_XEXPRESSION>
+        template <class E, class It, IS_XEXPRESSION>
         static inline auto polyval(E&& x, It coeff)
         {
             auto c = coeff++;
-            return xt::fma(x, poly<D-1>::polyval(x, coeff), *c);
+            return xt::fma(x, poly<D - 1>::polyval(x, coeff), *c);
         };
 #endif
     };
@@ -79,7 +80,7 @@ namespace libthermo
     public:
         RealGas(double r_)
             : Gas<RealGas>("RealGas")
-            , r(r_){};
+            , m_r(r_){};
 
         template <class T, IS_NOT_XTENSOR>
         auto Gamma(const T& t) const;
@@ -105,8 +106,8 @@ namespace libthermo
         template <class T, IS_XTENSOR>
         auto dPhi(const T& t1, const T& t2) const;
 
-        template <class T>
-        auto R() const;
+        // template <class T>
+        double R() const;
 
         template <class T, IS_NOT_XTENSOR>
         auto PR(const T& t1, const T& t2, const T& eff_poly) const;
@@ -120,8 +121,20 @@ namespace libthermo
         template <class T, IS_XTENSOR>
         auto EffPoly(const T& p1, const T& t1, const T& p2, const T& t2) const;
 
+        template <class T>
+        auto StaticT(const T& tt, const T& mach) const;
+
+        template <class T>
+        auto TFromPR(const T& pr, const T& t1, const T& eff_poly) const;
+
+        template <class T>
+        auto TFromH(const T& h) const;
+
+        template <class T>
+        auto TFromPhi(const T& h) const;
+
     protected:
-        double r;
+        double m_r;
 
         static const std::size_t coeff_size = 7;
         // https://www.cerfacs.fr/antares/_downloads/6d913fcaec57101ff421a2220b0769db/antares_doc.pdf
@@ -142,20 +155,23 @@ namespace libthermo
                                                   -0.521742,
                                                   0.,
                                                   1068.43 };
+
+        std::array<double, 5> reverse_coeffs
+            = { 8.34098e-15, -2.36783e-10, 2.45527e-06, -0.010099, 18.2555 };
     };
 
     template <class T, IS_NOT_XTENSOR>
     auto RealGas::Gamma(const T& t) const
     {
         T tmp_cp = Cp(t);
-        return tmp_cp / (tmp_cp - r);
+        return tmp_cp / (tmp_cp - m_r);
     }
 
 #ifdef LIBTHERMO_USE_XTENSOR
     template <class T, IS_XTENSOR>
     auto RealGas::Gamma(const T& t) const
     {
-        return Cp(t) / (Cp(t) - r);
+        return Cp(t) / (Cp(t) - m_r);
     }
 #endif
 
@@ -181,7 +197,7 @@ namespace libthermo
     template <class T, IS_XTENSOR>
     auto RealGas::Phi(const T& t) const
     {
-        return polyval<7>(t, ++phi_coeff.rbegin());  //+ phi_coeff[8] * xt::log(t);
+        return polyval<7>(t, ++phi_coeff.rbegin()) + phi_coeff[8] * xt::log(t);
     }
 #endif
 
@@ -201,38 +217,96 @@ namespace libthermo
     }
 #endif
 
-    template <class T>
-    auto RealGas::R() const
+    // template <class T>
+    inline double RealGas::R() const
     {
-        return r;
+        return m_r;
     }
 
     template <class T, IS_NOT_XTENSOR>
     auto RealGas::PR(const T& t1, const T& t2, const T& eff_poly) const
     {
-        return std::exp(dPhi(t1, t2) * eff_poly / r);
+        return std::exp(dPhi(t1, t2) * eff_poly / m_r);
     }
 
 #ifdef LIBTHERMO_USE_XTENSOR
     template <class T, class E, IS_XTENSOR>
     auto RealGas::PR(const T& t1, const T& t2, const E& eff_poly) const
     {
-        return xt::exp(dPhi(t1, t2) * eff_poly / r);
+        return xt::exp(dPhi(t1, t2) * eff_poly / m_r);
     }
 #endif
 
     template <class T, IS_NOT_XTENSOR>
     auto RealGas::EffPoly(const T& p1, const T& t1, const T& p2, const T& t2) const
     {
-        return R<T>() * log(p2 / p1) / dPhi(t1, t2);
+        return R() * log(p2 / p1) / dPhi(t1, t2);
     }
 
 #ifdef LIBTHERMO_USE_XTENSOR
     template <class T, IS_XTENSOR>
     auto RealGas::EffPoly(const T& p1, const T& t1, const T& p2, const T& t2) const
     {
-        return R<double>() * xt::log(p2 / p1) / dPhi(t1, t2);
+        return R() * xt::log(p2 / p1) / dPhi(t1, t2);
     }
 #endif
+
+    template <class T>
+    inline auto RealGas::StaticT(const T& tt, const T& mach) const
+    {
+        return tt / (1 + 0.5 * (Cp(tt) / (Cp(tt) - m_r) - 1.) * std::pow(mach, 2.));
+    }
+
+    template <class T>
+    auto RealGas::TFromPR(const T& pr, const T& t1, const T& eff_poly) const
+    {
+        return TFromPhi(std::log(pr) * m_r / eff_poly + Phi(t1));
+    }
+
+    template <class T>
+    auto RealGas::TFromH(const T& h) const
+    {
+        double t, cp, h1, x;
+        std::size_t counter = 0;
+        std::array<double, 7> reverse_coeffs_h
+            = { 4.94485e-36, -4.36014e-29, 1.46887e-22, -2.19316e-16,
+                6.79214e-11, 0.0010072,    -10.4407 };
+
+        t = polyval<6>(h, reverse_coeffs_h.rbegin());
+        cp = Cp(t);
+        h1 = H(t);
+        x = h - h1;
+
+        while (counter < 16 && std::abs(x) > 1e-10)
+        {
+            t += x / cp;
+            cp = Cp(t);
+            h1 = H(t);
+            x = h - h1;
+            ++counter;
+        }
+
+        return t;
+    }
+
+    template <class T>
+    auto RealGas::TFromPhi(const T& phi) const
+    {
+        double t, cp, x, x1;
+        std::size_t counter = 0;
+
+        x = polyval<4>(phi, reverse_coeffs.rbegin());
+        t = std::exp(x);
+
+        x1 = phi - Phi(t);
+        while (counter < 20 && std::abs(x1) > 1e-10)
+        {
+            t += x1 * t / Cp(t);
+            x1 = phi - Phi(t);
+            ++counter;
+        }
+
+        return t;
+    }
 }
 #endif

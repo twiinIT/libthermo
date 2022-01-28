@@ -27,9 +27,10 @@ set(SP_DIR "${PY_SP_DIR}" CACHE PATH "Site-package directory")
 message("-- CMake install prefix: " ${CMAKE_INSTALL_PREFIX})
 message("  -> site-packages: " ${SP_DIR})
 
-pybind11_add_module(pythermo ideal.cpp)
+pybind11_add_module(pythermo ideal.cpp benchmark.cc benchmark.h)
 target_include_directories(pythermo PUBLIC ${NUMPY_INCLUDE_DIRS})
-target_link_libraries(pythermo PUBLIC libthermo xtensor-python tbb)
+target_link_libraries(pythermo PRIVATE xtensor-python tbb)
+target_link_libraries(pythermo PUBLIC libthermo)
 
 target_compile_options(pythermo PUBLIC "-march=native")
 install(TARGETS pythermo DESTINATION ${SP_DIR})
