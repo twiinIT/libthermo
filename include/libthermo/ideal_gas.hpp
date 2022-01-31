@@ -4,22 +4,22 @@
 //
 // The full license is in the file LICENSE, distributed with this software.
 
-#ifndef LIBTHERMO_IDEAL_GAS_H
-#define LIBTHERMO_IDEAL_GAS_H
+#ifndef LIBTHERMO_IDEAL_GAS_HPP
+#define LIBTHERMO_IDEAL_GAS_HPP
 
-#include "libthermo/gas.h"
-#include "libthermo/math_utils.h"
+#include "libthermo/thermo.hpp"
+#include "libthermo/math_utils.hpp"
 
 #include <string>
 
 
 namespace thermo
 {
-    class IdealGas : public Gas<IdealGas>
+    class IdealGas : public Thermo<IdealGas>
     {
     public:
         IdealGas(double r_, double cp_)
-            : Gas<IdealGas>("IdealGas")
+            : Thermo<IdealGas>("IdealGas")
             , m_r(r_)
             , m_cp(cp_)
             , m_gamma(cp_ / (cp_ - r_)){};

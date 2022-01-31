@@ -4,10 +4,10 @@
 //
 // The full license is in the file LICENSE, distributed with this software.
 
-#ifndef LIBTHERMO_REAL_GAS_H
-#define LIBTHERMO_REAL_GAS_H
+#ifndef LIBTHERMO_REAL_GAS_HPP
+#define LIBTHERMO_REAL_GAS_HPP
 
-#include "libthermo/gas.h"
+#include "libthermo/thermo.hpp"
 
 #ifdef LIBTHERMO_USE_XTENSOR
 #include "xtensor/xexpression.hpp"
@@ -75,11 +75,11 @@ namespace thermo
         return poly<I>::polyval(x, coeff);
     };
 
-    class RealGas : public Gas<RealGas>
+    class RealGas : public Thermo<RealGas>
     {
     public:
         RealGas(double r_)
-            : Gas<RealGas>("RealGas")
+            : Thermo<RealGas>("RealGas")
             , m_r(r_){};
 
         template <class T, IS_NOT_XTENSOR>

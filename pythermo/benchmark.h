@@ -8,6 +8,6 @@
 
 namespace thermo::utils
 {
-    // void Benchmark(GasInterface* gas, long ntimes);
+    // void Benchmark(ThermoInterface* gas, long ntimes);
 }
 #endif

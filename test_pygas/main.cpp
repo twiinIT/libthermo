@@ -10,13 +10,13 @@ using namespace thermo;
 
 struct Row
 {
-    Row(GasInterface* gas_)
+    Row(ThermoInterface* gas_)
     {
         gas = gas_;
         std::cout << gas->H(288);
     }
 
-    GasInterface* gas;
+    ThermoInterface* gas;
 
     void print_h()
     {
@@ -27,5 +27,5 @@ struct Row
 
 PYBIND11_MODULE(test_pygas, m)
 {
-    py::class_<Row>(m, "Row").def(py::init<GasInterface*>()).def("print_h", &Row::print_h);
+    py::class_<Row>(m, "Row").def(py::init<ThermoInterface*>()).def("print_h", &Row::print_h);
 }
