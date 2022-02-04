@@ -4,25 +4,16 @@
 //
 // The full license is in the file LICENSE, distributed with this software.
 
-#include "gas.hpp"
+#include "thermo.hpp"
 
 #include "libthermo/real_gas.hpp"
 
-#include <pybind11/pybind11.h>
-#define FORCE_IMPORT_ARRAY
-#include "xtensor-python/pytensor.hpp"
-#include "xtensor-python/pyarray.hpp"
 
-#include <pybind11/stl.h>
-#include <pybind11/stl_bind.h>
-
-#include <iostream>
-#include <chrono>
-#include <functional>
-
+namespace py = pybind11;
+using namespace thermo;
 
 class PyRealGas
-    : public ThermoInterface<array_type>
+    : public ThermoInterface<array_t>
     , public RealGas
 {
 public:
@@ -41,33 +32,59 @@ public:
     {
         return RealGas::Gamma(t);
     }
-    array_type Gamma(const array_type& t) const override
+    array_t Gamma(const array_t& t) const override
     {
         return RealGas::Gamma(t);
     }
+
     double Cp(double t) const override
     {
         return RealGas::Cp(t);
     }
+    array_t Cp(const array_t& t) const override
+    {
+        return RealGas::Cp(t);
+    }
+
     double H(double t) const override
     {
         return RealGas::H(t);
     }
+    array_t H(const array_t& t) const override
+    {
+        return RealGas::H(t);
+    }
+
     double Phi(double t) const override
     {
         return RealGas::Phi(t);
     }
-    double R() const override
+    array_t Phi(const array_t& t) const override
     {
-        return RealGas::R();
+        return RealGas::Phi(t);
     }
+
     double PR(double t1, double t2, double eff_poly) const override
     {
         return RealGas::PR(t1, t2, eff_poly);
     }
+    array_t PR(const array_t& t1, const array_t& t2, const array_t& eff_poly) const override
+    {
+        return RealGas::PR(t1, t2, eff_poly);
+    }
+
     double EffPoly(double p1, double t1, double p2, double t2) const override
     {
         return RealGas::EffPoly(p1, t1, p2, t2);
+    }
+    array_t EffPoly(const array_t& p1, const array_t& t1, const array_t& p2, const array_t& t2) const override
+    {
+        return RealGas::EffPoly(p1, t1, p2, t2);
+    }
+
+    double R() const override
+    {
+        return RealGas::R();
     }
     double StaticT(double t, double mach) const override
     {
@@ -91,29 +108,31 @@ public:
 void
 real_gas(py::module_& m)
 {
-    using array_type = xt::pyarray<double, xt::layout_type::row_major>;
+    using array_t = xt::pyarray<double, xt::layout_type::row_major>;
 
-    py::class_<PyRealGas, ThermoInterface<array_type>, std::shared_ptr<PyRealGas>>(m, "RealGas")
+    py::class_<PyRealGas, ThermoInterface<array_t>, std::shared_ptr<PyRealGas>>(m, "RealGas")
         .def(py::init<double>())
         .def_property_readonly("constant", &RealGas::Constant, "Gas constant")
         .def_property_readonly("r", &RealGas::R, "Gas constant")
+
         .def("enthalpy", &RealGas::Enthalpy<double>, "Enthalpy", py::arg("temperature"))
         .def("h", &RealGas::H<double>, "Enthalpy", py::arg("temperature"))
         .def(
             "h",
-            [](const PyRealGas& self, const array_type& t1) -> array_type { return self.H(t1); },
+            [](const PyRealGas& self, const array_t& t1) -> array_t { return self.H(t1); },
             "Enthalpy",
             py::arg("temperature"))
+
         .def("entropy", &RealGas::Entropy<double>, "Entropy", py::arg("temperature"))
         .def("phi", &RealGas::Phi<double>, "Entropy", py::arg("temperature"))
         .def(
             "phi",
-            [](const PyRealGas& self, const array_type& t1) -> array_type { return self.Phi(t1); },
+            [](const PyRealGas& self, const array_t& t1) -> array_t { return self.Phi(t1); },
             "Entropy",
             py::arg("temperature"))
         .def(
             "dphi",
-            [](const PyRealGas& self, const array_type& t1, const array_type& t2) -> array_type {
+            [](const PyRealGas& self, const array_t& t1, const array_t& t2) -> array_t {
                 return self.dPhi(t1, t2);
             },
             "Entropy delta",
@@ -125,7 +144,7 @@ real_gas(py::module_& m)
              py::arg("temperature"))
         .def(
             "gamma",
-            [](const PyRealGas& self, const array_type& t1) -> array_type {
+            [](const PyRealGas& self, const array_t& t1) -> array_t {
                 return self.Gamma(t1);
             },
             "Specific heat ratio",
@@ -138,7 +157,7 @@ real_gas(py::module_& m)
         .def("cp", &RealGas::Cp<double>, "Specific heat pressure", py::arg("temperature"))
         .def(
             "cp",
-            [](const PyRealGas& self, const array_type& t) -> array_type { return self.Cp(t); },
+            [](const PyRealGas& self, const array_t& t) -> array_t { return self.Cp(t); },
             "Specific heat pressure",
             py::arg("temperature"))
         .def("pressure_ratio",
@@ -156,15 +175,15 @@ real_gas(py::module_& m)
         .def(
             "pr",
             [](const PyRealGas& self,
-               const array_type& t1,
-               const array_type& t2,
-               const array_type& eff_poly) -> array_type { return self.PR(t1, t2, eff_poly); },
+               const array_t& t1,
+               const array_t& t2,
+               const array_t& eff_poly) -> array_t { return self.PR(t1, t2, eff_poly); },
             "Pressure Ratio",
             py::arg("initiale temperature"),
             py::arg("finale temperature"),
             py::arg("polytropic efficiency"))
         .def("pr",
-             &RealGas::PR<array_type, double>,
+             &RealGas::PR<array_t, double>,
              "Pressure Ratio",
              py::arg("initiale temperature"),
              py::arg("finale temperature"),
@@ -179,10 +198,10 @@ real_gas(py::module_& m)
         .def(
             "eff_poly",
             [](const PyRealGas& self,
-               const array_type& p1,
-               const array_type& t1,
-               const array_type& p2,
-               const array_type& t2) -> array_type { return self.EffPoly(p1, t1, p2, t2); },
+               const array_t& p1,
+               const array_t& t1,
+               const array_t& p2,
+               const array_t& t2) -> array_t { return self.EffPoly(p1, t1, p2, t2); },
             "Polytropic efficiency",
             py::arg("initial pressure"),
             py::arg("initial temperature"),

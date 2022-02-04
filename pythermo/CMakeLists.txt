@@ -8,7 +8,6 @@ set(CMAKE_MODULE_PATH
     ${CMAKE_SOURCE_DIR}/cmake
     ${CMAKE_MODULE_PATH})
 
-
 find_package(xtensor-python REQUIRED)
 message(STATUS "Found xtensor-python: ${xtensor-python_INCLUDE_DIRS}/xtensor-python")
 
@@ -27,7 +26,7 @@ set(SP_DIR "${PY_SP_DIR}" CACHE PATH "Site-package directory")
 message("-- CMake install prefix: " ${CMAKE_INSTALL_PREFIX})
 message("  -> site-packages: " ${SP_DIR})
 
-pybind11_add_module(pythermo main.cpp ideal_gas.cpp)
+pybind11_add_module(pythermo main.cpp thermo.hpp thermo.cpp ideal_gas.cpp real_gas.cpp)
 target_include_directories(pythermo PUBLIC ${NUMPY_INCLUDE_DIRS})
 target_link_libraries(pythermo PRIVATE xtensor-python tbb)
 target_link_libraries(pythermo PUBLIC libthermo)

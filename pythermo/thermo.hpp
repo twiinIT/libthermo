@@ -12,7 +12,7 @@
 #include "libthermo/real_gas.hpp"
 
 #include <pybind11/pybind11.h>
-#define FORCE_IMPORT_ARRAY
+
 #include "xtensor-python/pytensor.hpp"
 #include "xtensor-python/pyarray.hpp"
 
@@ -22,7 +22,7 @@
 
 using array_t = xt::pyarray<double, xt::layout_type::row_major>;
 
-class PyGas : public thermo::ThermoInterface<array_t>
+class PyThermo : public thermo::ThermoInterface<array_t>
 {
 public:
     using thermo::ThermoInterface<array_t>::ThermoInterface;
@@ -31,7 +31,7 @@ public:
     array_t Gamma(const array_t& t) const override;
 
     double Cp(double t) const override;
-    array_t Cp(const array_t& t);
+    array_t Cp(const array_t& t) const;
 
     double H(double t) const override;
     array_t H(const array_t& t) const override;
@@ -60,6 +60,12 @@ public:
 };
 
 void
-gas(pybind11::module_& m);
+thermo_base(pybind11::module_& m);
+
+void
+ideal_gas(pybind11::module_& m);
+
+void
+real_gas(pybind11::module_& m);
 
 #endif

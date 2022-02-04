@@ -4,10 +4,15 @@
 //
 // The full license is in the file LICENSE, distributed with this software.
 
-#include "gas.hpp"
+#define FORCE_IMPORT_ARRAY
+
+#include "thermo.hpp"
+
 #include "libthermo/ideal_gas.hpp"
 #include "libthermo/real_gas.hpp"
 
+#include "xtensor-python/pytensor.hpp"
+#include "xtensor-python/pyarray.hpp"
 
 namespace py = pybind11;
 using namespace thermo;
@@ -34,9 +39,9 @@ PYBIND11_MODULE(pythermo, m)
     m.doc() = "Python bindings of the C++ implementation of the thermodynamic library 'libthermo'.";
 
     xt::import_numpy();
-    gas(m);
-    // ideal_gas(m);
-    // real_gas(m);
+    thermo_base(m);
+    ideal_gas(m);
+    real_gas(m);
 
     // m.def("print_h", &print_h);
 }
