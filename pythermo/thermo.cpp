@@ -80,10 +80,7 @@ PyThermo::EffPoly(double p1, double t1, double p2, double t2) const
 }
 
 array_t
-PyThermo::EffPoly(const array_t& p1,
-               const array_t& t1,
-               const array_t& p2,
-               const array_t& t2) const
+PyThermo::EffPoly(const array_t& p1, const array_t& t1, const array_t& p2, const array_t& t2) const
 {
     PYBIND11_OVERLOAD_PURE(array_t, ThermoInterface, v_eff_poly, p1, t1, p2, t2);
 }
@@ -123,28 +120,58 @@ void
 thermo_base(py::module_& m)
 {
     // ==== Binding of the abstract Gas class ==== //
-    auto g = py::class_<ThermoInterface<array_t>,
-                        PyThermo,
-                        std::shared_ptr<ThermoInterface<array_t>>>(m, "Gas");
+    auto g
+        = py::class_<ThermoInterface<array_t>, PyThermo, std::shared_ptr<ThermoInterface<array_t>>>(
+            m, "Thermo");
     g.def(py::init<>());
 
     g.def_property_readonly("constant", &ThermoInterface<array_t>::R, "Gas constant");
     g.def_property_readonly("r", &ThermoInterface<array_t>::R, "Gas constant");
 
-    g.def("enthalpy", py::overload_cast<double>(&ThermoInterface<array_t>::H, py::const_), "Enthalpy", py::arg("temperature"));
-    g.def("enthalpy", py::overload_cast<const array_t&>(&ThermoInterface<array_t>::H, py::const_), "Enthalpy", py::arg("temperature"));
-    g.def("h", py::overload_cast<double>(&ThermoInterface<array_t>::H, py::const_), "Enthalpy", py::arg("temperature"));
-    g.def("h",  py::overload_cast<const array_t&>(&ThermoInterface<array_t>::H, py::const_), "Enthalpy", py::arg("temperature"));
+    g.def("enthalpy",
+          py::overload_cast<double>(&ThermoInterface<array_t>::H, py::const_),
+          "Enthalpy",
+          py::arg("temperature"));
+    g.def("enthalpy",
+          py::overload_cast<const array_t&>(&ThermoInterface<array_t>::H, py::const_),
+          "Enthalpy",
+          py::arg("temperature"));
+    g.def("h",
+          py::overload_cast<double>(&ThermoInterface<array_t>::H, py::const_),
+          "Enthalpy",
+          py::arg("temperature"));
+    g.def("h",
+          py::overload_cast<const array_t&>(&ThermoInterface<array_t>::H, py::const_),
+          "Enthalpy",
+          py::arg("temperature"));
 
-    g.def("entropy", py::overload_cast<double>(&ThermoInterface<array_t>::Phi, py::const_), "Entropy", py::arg("temperature"));
-    g.def("phi", py::overload_cast<double>(&ThermoInterface<array_t>::Phi, py::const_), "Entropy", py::arg("temperature"));
+    g.def("entropy",
+          py::overload_cast<double>(&ThermoInterface<array_t>::Phi, py::const_),
+          "Entropy",
+          py::arg("temperature"));
+    g.def("phi",
+          py::overload_cast<double>(&ThermoInterface<array_t>::Phi, py::const_),
+          "Entropy",
+          py::arg("temperature"));
 
     //.def("specific_heat_ratio",
     //    &ThermoInterface::SpecificHeatRatio,
     //       "Specific heat ratio",
     //     py::arg("temperature"))
+    g.def("specific_heat_ratio",
+          py::overload_cast<double>(&ThermoInterface<array_t>::Gamma, py::const_),
+          "Specific heat ratio",
+          py::arg("temperature"));
+    g.def("specific_heat_ratio",
+          py::overload_cast<const array_t&>(&ThermoInterface<array_t>::Gamma, py::const_),
+          "Specific heat ratio",
+          py::arg("temperature"));
     g.def("gamma",
           py::overload_cast<double>(&ThermoInterface<array_t>::Gamma, py::const_),
+          "Specific heat ratio",
+          py::arg("temperature"));
+    g.def("gamma",
+          py::overload_cast<const array_t&>(&ThermoInterface<array_t>::Gamma, py::const_),
           "Specific heat ratio",
           py::arg("temperature"));
 
@@ -152,7 +179,10 @@ thermo_base(py::module_& m)
           py::overload_cast<double>(&ThermoInterface<array_t>::Cp, py::const_),
           "Specific heat pressure",
           py::arg("temperature"));
-    g.def("cp", py::overload_cast<double>(&ThermoInterface<array_t>::Cp, py::const_), "Specific heat pressure", py::arg("temperature"));
+    g.def("cp",
+          py::overload_cast<double>(&ThermoInterface<array_t>::Cp, py::const_),
+          "Specific heat pressure",
+          py::arg("temperature"));
 
     g.def("pressure_ratio",
           py::overload_cast<double, double, double>(&ThermoInterface<array_t>::PR, py::const_),
@@ -168,14 +198,16 @@ thermo_base(py::module_& m)
           py::arg("polytropic efficiency"));
 
     g.def("eff_poly",
-          py::overload_cast<double, double, double, double>(&ThermoInterface<array_t>::EffPoly, py::const_),
+          py::overload_cast<double, double, double, double>(&ThermoInterface<array_t>::EffPoly,
+                                                            py::const_),
           "Polytropic efficiency",
           py::arg("initial pressure"),
           py::arg("initial temperature"),
           py::arg("final pressure"),
           py::arg("final temperature"));
     g.def("polytropic_efficiency",
-          py::overload_cast<double, double, double, double>(&ThermoInterface<array_t>::EffPoly, py::const_),
+          py::overload_cast<double, double, double, double>(&ThermoInterface<array_t>::EffPoly,
+                                                            py::const_),
           "Polytropic efficiency",
           py::arg("initial pressure"),
           py::arg("initial temperature"),

@@ -14,19 +14,13 @@ using namespace thermo;
 
 class PyRealGas
     : public ThermoInterface<array_t>
-    , public RealGas
+    , private RealGas
 {
 public:
     PyRealGas(double r_)
         : RealGas(r_)
     {
     }
-    using RealGas::Cp;
-    using RealGas::EffPoly;
-    using RealGas::Gamma;
-    using RealGas::H;
-    using RealGas::Phi;
-    using RealGas::PR;
 
     double Gamma(double t) const override
     {
@@ -77,7 +71,10 @@ public:
     {
         return RealGas::EffPoly(p1, t1, p2, t2);
     }
-    array_t EffPoly(const array_t& p1, const array_t& t1, const array_t& p2, const array_t& t2) const override
+    array_t EffPoly(const array_t& p1,
+                    const array_t& t1,
+                    const array_t& p2,
+                    const array_t& t2) const override
     {
         return RealGas::EffPoly(p1, t1, p2, t2);
     }
@@ -112,24 +109,43 @@ real_gas(py::module_& m)
 
     py::class_<PyRealGas, ThermoInterface<array_t>, std::shared_ptr<PyRealGas>>(m, "RealGas")
         .def(py::init<double>())
-        .def_property_readonly("constant", &RealGas::Constant, "Gas constant")
-        .def_property_readonly("r", &RealGas::R, "Gas constant")
+        .def_property_readonly("constant", &PyRealGas::R, "Gas constant")
+        .def_property_readonly("r", &PyRealGas::R, "Gas constant")
 
-        .def("enthalpy", &RealGas::Enthalpy<double>, "Enthalpy", py::arg("temperature"))
-        .def("h", &RealGas::H<double>, "Enthalpy", py::arg("temperature"))
-        .def(
-            "h",
-            [](const PyRealGas& self, const array_t& t1) -> array_t { return self.H(t1); },
-            "Enthalpy",
-            py::arg("temperature"))
+        .def("enthalpy",
+             py::overload_cast<double>(&PyRealGas::H, py::const_),
+             "Enthalpy",
+             py::arg("temperature"))
+        .def("enthalpy",
+             py::overload_cast<const array_t&>(&PyRealGas::H, py::const_),
+             "Enthalpy",
+             py::arg("temperature"))
+        .def("h",
+             py::overload_cast<double>(&PyRealGas::H, py::const_),
+             "Enthalpy",
+             py::arg("temperature"))
+        .def("h",
+             py::overload_cast<const array_t&>(&PyRealGas::H, py::const_),
+             "Enthalpy",
+             py::arg("temperature"))
 
-        .def("entropy", &RealGas::Entropy<double>, "Entropy", py::arg("temperature"))
-        .def("phi", &RealGas::Phi<double>, "Entropy", py::arg("temperature"))
-        .def(
-            "phi",
-            [](const PyRealGas& self, const array_t& t1) -> array_t { return self.Phi(t1); },
-            "Entropy",
-            py::arg("temperature"))
+        .def("entropy",
+             py::overload_cast<double>(&PyRealGas::Phi, py::const_),
+             "Entropy",
+             py::arg("temperature"))
+        .def("entropy",
+             py::overload_cast<const array_t&>(&PyRealGas::Phi, py::const_),
+             "Entropy",
+             py::arg("temperature"))
+        .def("phi",
+             py::overload_cast<double>(&PyRealGas::Phi, py::const_),
+             "Entropy",
+             py::arg("temperature"))
+        .def("phi",
+             py::overload_cast<const array_t&>(&PyRealGas::Phi, py::const_),
+             "Entropy",
+             py::arg("temperature"))
+        /*
         .def(
             "dphi",
             [](const PyRealGas& self, const array_t& t1, const array_t& t2) -> array_t {
@@ -138,89 +154,103 @@ real_gas(py::module_& m)
             "Entropy delta",
             py::arg("initiale temperature"),
             py::arg("final temperature"))
+        */
         .def("specific_heat_ratio",
-             &RealGas::SpecificHeatRatio<double>,
+             py::overload_cast<double>(&PyRealGas::Gamma, py::const_),
              "Specific heat ratio",
              py::arg("temperature"))
-        .def(
-            "gamma",
-            [](const PyRealGas& self, const array_t& t1) -> array_t {
-                return self.Gamma(t1);
-            },
-            "Specific heat ratio",
-            py::arg("temperature"))
-        .def("gamma", &RealGas::Gamma<double>, "Specific heat ratio", py::arg("temperature"))
+        .def("specific_heat_ratio",
+             py::overload_cast<const array_t&>(&PyRealGas::Gamma, py::const_),
+             "Specific heat ratio",
+             py::arg("temperature"))
+        .def("gamma",
+             py::overload_cast<double>(&PyRealGas::Gamma, py::const_),
+             "Specific heat ratio",
+             py::arg("temperature"))
+        .def("gamma",
+             py::overload_cast<const array_t&>(&PyRealGas::Gamma, py::const_),
+             "Specific heat ratio",
+             py::arg("temperature"))
+
         .def("specific_heat_pressure",
-             &RealGas::SpecificHeatPressure<double>,
+             py::overload_cast<double>(&PyRealGas::Cp, py::const_),
              "Specific heat pressure",
              py::arg("temperature"))
-        .def("cp", &RealGas::Cp<double>, "Specific heat pressure", py::arg("temperature"))
-        .def(
-            "cp",
-            [](const PyRealGas& self, const array_t& t) -> array_t { return self.Cp(t); },
-            "Specific heat pressure",
-            py::arg("temperature"))
+        .def("specific_heat_pressure",
+             py::overload_cast<const array_t&>(&PyRealGas::Cp, py::const_),
+             "Specific heat pressure",
+             py::arg("temperature"))
+        .def("cp",
+             py::overload_cast<double>(&PyRealGas::Cp, py::const_),
+             "Specific heat pressure",
+             py::arg("temperature"))
+        .def("cp",
+             py::overload_cast<const array_t&>(&PyRealGas::Cp, py::const_),
+             "Specific heat pressure",
+             py::arg("temperature"))
+
         .def("pressure_ratio",
-             &RealGas::PressureRatio<double>,
+             py::overload_cast<double, double, double>(&PyRealGas::PR, py::const_),
+             "Pressure Ratio",
+             py::arg("initiale temperature"),
+             py::arg("finale temperature"),
+             py::arg("polytropic efficiency"))
+        .def("pressure_ratio",
+             py::overload_cast<const array_t&, const array_t&, const array_t&>(&PyRealGas::PR,
+                                                                               py::const_),
              "Pressure Ratio",
              py::arg("initiale temperature"),
              py::arg("finale temperature"),
              py::arg("polytropic efficiency"))
         .def("pr",
-             &RealGas::PR<double>,
+             py::overload_cast<double, double, double>(&PyRealGas::PR, py::const_),
              "Pressure Ratio",
              py::arg("initiale temperature"),
              py::arg("finale temperature"),
              py::arg("polytropic efficiency"))
-        .def(
-            "pr",
-            [](const PyRealGas& self,
-               const array_t& t1,
-               const array_t& t2,
-               const array_t& eff_poly) -> array_t { return self.PR(t1, t2, eff_poly); },
-            "Pressure Ratio",
-            py::arg("initiale temperature"),
-            py::arg("finale temperature"),
-            py::arg("polytropic efficiency"))
         .def("pr",
-             &RealGas::PR<array_t, double>,
+             py::overload_cast<const array_t&, const array_t&, const array_t&>(&PyRealGas::PR,
+                                                                               py::const_),
              "Pressure Ratio",
              py::arg("initiale temperature"),
              py::arg("finale temperature"),
              py::arg("polytropic efficiency"))
+
         .def("eff_poly",
-             &RealGas::EffPoly<double>,
+             py::overload_cast<double, double, double, double>(&PyRealGas::EffPoly, py::const_),
              "Polytropic efficiency",
              py::arg("initial pressure"),
              py::arg("initial temperature"),
              py::arg("final pressure"),
              py::arg("final temperature"))
-        .def(
-            "eff_poly",
-            [](const PyRealGas& self,
-               const array_t& p1,
-               const array_t& t1,
-               const array_t& p2,
-               const array_t& t2) -> array_t { return self.EffPoly(p1, t1, p2, t2); },
-            "Polytropic efficiency",
-            py::arg("initial pressure"),
-            py::arg("initial temperature"),
-            py::arg("final pressure"),
-            py::arg("final temperature"))
+        .def("eff_poly",
+             py::overload_cast<const array_t&, const array_t&, const array_t&, const array_t&>(
+                 &PyRealGas::EffPoly, py::const_),
+             "Polytropic efficiency",
+             py::arg("initial pressure"),
+             py::arg("initial temperature"),
+             py::arg("final pressure"),
+             py::arg("final temperature"))
         .def("polytropic_efficiency",
-             &RealGas::PolytropicEfficiency<double>,
+             py::overload_cast<double, double, double, double>(&PyRealGas::EffPoly, py::const_),
              "Polytropic efficiency",
              py::arg("initial pressure"),
              py::arg("initial temperature"),
              py::arg("final pressure"),
              py::arg("final temperature"))
-        .def("t_from_h", &RealGas::TFromH<double>, "Temperature from enthalpy", py::arg("enthalpy"))
-        .def("t_from_phi",
-             &RealGas::TFromPhi<double>,
-             "Temperature from entropy",
-             py::arg("entropy"))
+        .def("polytropic_efficiency",
+             py::overload_cast<const array_t&, const array_t&, const array_t&, const array_t&>(
+                 &PyRealGas::EffPoly, py::const_),
+             "Polytropic efficiency",
+             py::arg("initial pressure"),
+             py::arg("initial temperature"),
+             py::arg("final pressure"),
+             py::arg("final temperature"))
+
+        .def("t_from_h", &PyRealGas::TFromH, "Temperature from enthalpy", py::arg("enthalpy"))
+        .def("t_from_phi", &PyRealGas::TFromPhi, "Temperature from entropy", py::arg("entropy"))
         .def("t_from_pr",
-             &RealGas::TFromPR<double>,
+             &PyRealGas::TFromPR,
              "Temperature from pressure ratio, initial temperature and polytropic efficiency",
              py::arg("pr"),
              py::arg("t1"),
