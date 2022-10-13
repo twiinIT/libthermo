@@ -4,9 +4,12 @@ channels:
 dependencies:
   - cmake
   - make
+  - gxx_linux-64
   - gtest
   - xtensor
+  - xsimd
   - tbb-devel
   - xtensor-python
   - pybind11
+  - python<=3.9
   - numpy

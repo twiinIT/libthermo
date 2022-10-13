@@ -13,6 +13,7 @@ project (libthermo)
 # Build options
 option(BUILD_TESTS "Enable C++ tests for libthermo" OFF)
 option(BUILD_BENCHS "Enable C++ benchmarks for libthermo" OFF)
+option(BUILD_PY "Build Python bindings of libthermo" OFF)
 option(LIBTHERMO_USE_XTENSOR "Enable C++ xtensor for libthermo" OFF)
 
 # Set installation directories (CMAKE_INSTALL_INCLUDEDIR, CMAKE_INSTALL_BINDIR, CMAKE_INSTALL_LIBDIR)
@@ -34,15 +35,15 @@ include_directories(${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR})
 
 set(LIBTHERMO_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-set(thermo_headers
-    ${LIBTHERMO_INCLUDE_DIR}/libthermo/gas.h
-    ${LIBTHERMO_INCLUDE_DIR}/libthermo/ideal_gas.h
-    ${LIBTHERMO_INCLUDE_DIR}/libthermo/real_gas.h
-    ${LIBTHERMO_INCLUDE_DIR}/libthermo/math_utils.h
+set(libthermo_headers
+    ${LIBTHERMO_INCLUDE_DIR}/libthermo/thermo.hpp
+    ${LIBTHERMO_INCLUDE_DIR}/libthermo/ideal_gas.hpp
+    ${LIBTHERMO_INCLUDE_DIR}/libthermo/real_gas.hpp
+    ${LIBTHERMO_INCLUDE_DIR}/libthermo/math_utils.hpp
 )
 
 add_library(libthermo INTERFACE ${libthermo_headers})
-target_compile_features(libthermo INTERFACE cxx_std_14)
+target_compile_features(libthermo INTERFACE cxx_std_17)
 
 target_include_directories(
     libthermo
@@ -76,6 +77,7 @@ if(BUILD_PY)
     add_subdirectory(pythermo)
 endif()
 
+#add_subdirectory(test_pygas)
 
 # Configuration
 # =============
