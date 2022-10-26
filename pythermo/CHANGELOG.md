@@ -1,5 +1,9 @@
 # History
 
+## 0.1.1
+
+- fix SFINAE error preventing to build on gcc 12 or MSVC
+
 ## 0.1.0
 
 - add Python bindings for `libthermo`, called `pythermo`
