@@ -18,23 +18,8 @@ namespace py = pybind11;
 using namespace thermo;
 using array_type = xt::pyarray<double, xt::layout_type::row_major>;
 
-/*
-void
-ideal_gas(py::module_&);
-void
-poly_thermo(py::module_&);
-*/
 
-/*
-void
-print_h(ThermoInterface<array_type>* gas)
-{
-    double h = gas->h(288.15);
-    std::cout << "h: " << h << std::endl;
-}
-*/
-
-PYBIND11_MODULE(pythermo, m)
+PYBIND11_MODULE(pythermo_core, m)
 {
     xt::import_numpy();
 
