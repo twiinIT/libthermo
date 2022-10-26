@@ -1,9 +1,10 @@
-from build.pythermo.pythermo import IdealGas, RealGas
+from build.pythermo.pythermo import IdealGas, PolyGas8, PolyGasProps8
+
 g = IdealGas(287, 1004)
 
 import numpy as np
 
-N = int(1e8)
+N = int(1e6)
 t1 = np.repeat(273., N)
 t2 = np.repeat(500., N)
 p1 = np.repeat(101325., N)
@@ -11,15 +12,24 @@ p2 = np.repeat(5e5, N)
 eff = np.repeat(0.8, N)
 res = np.ones_like(t1)
 
-print("Benchmark pythermo")
-%timeit res = g.cp(t1)
-%timeit res = g.phi(t1)
-%timeit res = g.pr(t1, t2, 0.8)
-%timeit res = g.eff_poly(p1, t1, p2, t2)
+print("Benchmark pythermo IdealGas")
+%timeit -r 100 -n 10 res = g.cp(t1)
+%timeit -r 100 -n 10 rres = g.phi(t1)
+%timeit -r 100 -n 10 rres = g.pr(t1, t2, eff)
+%timeit -r 100 -n 10 rres = g.eff_poly(p1, t1, p2, t2)
 
-g2 = RealGas(287.05)
-print("Benchmark pythermo2")
-%timeit res = g2.cp(t1)
+class PolyGas(PolyGas8):
+    def __init__(self) -> None:
+        cp_coeffs = [ 2.35822e-20,  -1.79613e-16, 4.70972e-13, -3.3094e-10,
+                -6.27984e-07, 0.00123785,   -0.521742,   1068.43 ]
+        super().__init__(PolyGasProps8(cp_coeffs, 0., 287.05))
+
+g = PolyGas()
+print("Benchmark pythermo PolyGas8")
+%timeit -r 100 -n 10 rres = g.cp(t1)
+%timeit -r 100 -n 10 rres = g.phi(t1)
+%timeit -r 100 -n 10 rres = g.pr(t1, t2, eff)
+%timeit -r 100 -n 10 rres = g.eff_poly(p1, t1, p2, t2)
 
 class NumpyIdealGas:
 
@@ -53,7 +63,7 @@ class NumpyIdealGas:
         return h / self._cp
 
 
-class NumpyRealGas:
+class NumpyPolyGas:
 
     cp_coeff = [ 2.35822e-20,  -1.79613e-16, 4.70972e-13, -3.3094e-10,
                 -6.27984e-07, 0.00123785,   -0.521742,   1068.43 ]
@@ -99,11 +109,16 @@ class NumpyRealGas:
 
 gpy = NumpyIdealGas(287, 1004)
 
-print("Benchmark pure NumPy")
-%timeit res = gpy.cp(t1)
-%timeit res = gpy.gamma(t1)
-%timeit res = gpy.r(t1)
-%timeit res = gpy.h(t1)
-%timeit res = gpy.phi(t1)
-%timeit res = gpy.pr(t1, t2, 0.8)
-%timeit res = gpy.eff_poly(p1, t1, p2, t2)
+print("Benchmark pure NumPy IdealGas")
+%timeit -r 10 -n 10 rres = gpy.cp(t1)
+%timeit -r 10 -n 10 rres = gpy.phi(t1)
+%timeit -r 10 -n 10 rres = gpy.pr(t1, t2, 0.8)
+%timeit -r 10 -n 10 rres = gpy.eff_poly(p1, t1, p2, t2)
+
+gpy = NumpyPolyGas(287)
+
+print("Benchmark pure NumPy PolyGas8")
+%timeit -r 10 -n 10 rres = gpy.cp(t1)
+%timeit -r 10 -n 10 rres = gpy.phi(t1)
+%timeit -r 10 -n 10 rres = gpy.pr(t1, t2, 0.8)
+%timeit -r 10 -n 10 rres = gpy.eff_poly(p1, t1, p2, t2)

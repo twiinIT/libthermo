@@ -31,18 +31,17 @@ message("  -> cmake config: " ${CMAKECONFIG_INSTALL_DIR})
 # Add helpers for cmake configuration
 include(CMakePackageConfigHelpers)
 
-include_directories(${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR})
-
 set(LIBTHERMO_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set(libthermo_headers
     ${LIBTHERMO_INCLUDE_DIR}/libthermo/thermo.hpp
+    ${LIBTHERMO_INCLUDE_DIR}/libthermo/exceptions.hpp
     ${LIBTHERMO_INCLUDE_DIR}/libthermo/ideal_gas.hpp
-    ${LIBTHERMO_INCLUDE_DIR}/libthermo/real_gas.hpp
+    ${LIBTHERMO_INCLUDE_DIR}/libthermo/poly_gas.hpp
     ${LIBTHERMO_INCLUDE_DIR}/libthermo/math_utils.hpp
 )
 
-add_library(libthermo INTERFACE ${libthermo_headers})
+add_library(libthermo INTERFACE)
 target_compile_features(libthermo INTERFACE cxx_std_17)
 
 target_include_directories(
@@ -55,8 +54,9 @@ target_include_directories(
 if (LIBTHERMO_USE_XTENSOR)
     find_package(xtensor REQUIRED)
     target_compile_definitions(libthermo
-                            INTERFACE
-                            LIBTHERMO_USE_XTENSOR)
+        INTERFACE
+            LIBTHERMO_USE_XTENSOR
+    )
     target_link_libraries(libthermo INTERFACE xtensor)
 endif ()
 

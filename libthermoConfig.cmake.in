@@ -8,7 +8,15 @@
 
 @PACKAGE_INIT@
 
+include(CMakeFindDependencyMacro)
+
 if(NOT TARGET @PROJECT_NAME@)
     include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
     get_target_property(@PROJECT_NAME@_INCLUDE_DIRS @PROJECT_NAME@ INTERFACE_INCLUDE_DIRECTORIES)
+endif()
+
+if(LIBTHERMO_USE_XTENSOR)
+    find_dependency(xtensor)
+    target_link_libraries(@PROJECT_NAME@ INTERFACE xtensor)
+    target_compile_definitions(@PROJECT_NAME@ INTERFACE LIBTHERMO_USE_XTENSOR)
 endif()

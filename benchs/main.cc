@@ -1,10 +1,10 @@
-#include "libthermo/ideal_gas.h"
-#include "libthermo/real_gas.h"
+#include "libthermo/ideal_gas.hpp"
+#include "libthermo/poly_gas.hpp"
 
-#ifdef LIBTHERMO_USE_XTENSOR
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xnoalias.hpp"
-#endif
+#ifdef LIBTHERMO_USE_XTENSOR  // clang-format off
+    #include "xtensor/xtensor.hpp"
+    #include "xtensor/xnoalias.hpp"
+#endif  // clang-format on
 
 #include "nlohmann/json.hpp"
 
@@ -22,7 +22,10 @@ namespace fs = std::filesystem;
 
 namespace thermo
 {
-    nlohmann::json timeit(std::function<void()> f, std::size_t size, long repeat, long number)
+    nlohmann::json timeit(std::function<void()> f,
+                          std::size_t size,
+                          unsigned long repeat,
+                          unsigned long number)
     {
         xt::xtensor<double, 1>::shape_type times_shape = { number };
         xt::xtensor<double, 1> times(times_shape, 1.);
@@ -82,102 +85,102 @@ namespace thermo
         double pr = (rand() % 10) / 1000. + 0.75;
         std::cout << phi << std::endl;
 
-        auto bench_Cp = [&](const long& ntimes) -> void {
+        auto bench_cp = [&](const long& ntimes) -> void {
             for (long i = 0; i < ntimes; i++)
             {
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                    res = gas.Cp(t1);
+                    res = gas.cp(t1);
                 }
             };
         };
 
-        auto bench_Gamma = [&](const long& ntimes) -> void {
+        auto bench_gamma = [&](const long& ntimes) -> void {
             for (long i = 0; i < ntimes; i++)
             {
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                    res = gas.Gamma(t1);
+                    res = gas.gamma(t1);
                 }
             };
         };
 
-        auto bench_H = [&](const long& ntimes) -> void {
+        auto bench_h = [&](const long& ntimes) -> void {
             for (long i = 0; i < ntimes; i++)
             {
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                    res = gas.H(t1);
+                    res = gas.h(t1);
                 }
             };
         };
 
-        auto bench_Phi = [&](const long& ntimes) -> void {
+        auto bench_phi = [&](const long& ntimes) -> void {
             for (long i = 0; i < ntimes; i++)
             {
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                    res = gas.Phi(t1);
+                    res = gas.phi(t1);
                 }
             };
         };
 
-        auto bench_R = [&](const long& ntimes) -> void {
+        auto bench_r = [&](const long& ntimes) -> void {
             for (long i = 0; i < ntimes; i++)
             {
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                    res = gas.R();
+                    res = gas.r();
                 }
             };
         };
 
-        auto bench_PR = [&](const long& ntimes) -> void {
+        auto bench_pr = [&](const long& ntimes) -> void {
             for (long i = 0; i < ntimes; i++)
             {
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                    res = gas.PR(t1, t2, 0.82);
+                    res = gas.pr(t1, t2, 0.82);
                 }
             };
         };
 
-        auto bench_TFromH = [&](const long& ntimes) -> void {
+        auto bench_t_from_h = [&](const long& ntimes) -> void {
             for (long i = 0; i < ntimes; i++)
             {
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                    res = gas.TFromH(h);
+                    res = gas.t_f_h(h, 1e-8);
                 }
             };
         };
 
-        auto bench_TFromPhi = [&](const long& ntimes) -> void {
+        auto bench_t_from_phi = [&](const long& ntimes) -> void {
             for (long i = 0; i < ntimes; i++)
             {
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                    res = gas.TFromPhi(phi);
+                    res = gas.t_f_phi(phi, 1e-8);
                 }
             };
         };
 
-        auto bench_TFromPR = [&](const long& ntimes) -> void {
+        auto bench_t_from_pr = [&](const long& ntimes) -> void {
             for (long i = 0; i < ntimes; i++)
             {
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                    res = gas.TFromPR(pr, t1, 0.82);
+                    res = gas.t_f_pr(pr, t1, 0.82, 1e-8);
                 }
             };
         };
 
-        auto bench_EffPoly = [&](const long& ntimes) -> void {
+        auto bench_eff_poly = [&](const long& ntimes) -> void {
             for (long i = 0; i < ntimes; i++)
             {
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                    res = gas.EffPoly(p1, t1, p2, t2);
+                    res = gas.eff_poly(p1, t1, p2, t2);
                 }
             };
         };
@@ -187,7 +190,7 @@ namespace thermo
             {
                 for (std::size_t j = 0; j < size; ++j)
                 {
-                    res = gas.PR(t1, t2, gas.EffPoly(p1, t1, p2, t2)) * p1;
+                    res = gas.pr(t1, t2, gas.eff_poly(p1, t1, p2, t2)) * p1;
                 }
             };
         };
@@ -201,16 +204,16 @@ namespace thermo
                    / static_cast<double>(ntimes * size);
         };
 
-        std::cout << "Cp -> " << timeit(bench_Cp, ntimes * 100) << " ns" << std::endl;
-        std::cout << "Gamma -> " << timeit(bench_Gamma, ntimes * 100) << " ns" << std::endl;
-        std::cout << "H -> " << timeit(bench_H, ntimes * 10) << " ns" << std::endl;
-        std::cout << "Phi -> " << timeit(bench_Phi, ntimes) << " ns" << std::endl;
-        std::cout << "R -> " << timeit(bench_R, ntimes * 10) << " ns" << std::endl;
-        std::cout << "PR -> " << timeit(bench_PR, ntimes) << " ns" << std::endl;
-        std::cout << "TFromH -> " << timeit(bench_TFromH, ntimes) << " ns" << std::endl;
-        std::cout << "TFromPhi -> " << timeit(bench_TFromPhi, ntimes) << " ns" << std::endl;
-        std::cout << "TFromPR -> " << timeit(bench_TFromPR, ntimes) << " ns" << std::endl;
-        std::cout << "EffPoly -> " << timeit(bench_EffPoly, ntimes) << " ns" << std::endl;
+        std::cout << "cp -> " << timeit(bench_cp, ntimes * 100) << " ns" << std::endl;
+        std::cout << "gamma -> " << timeit(bench_gamma, ntimes * 100) << " ns" << std::endl;
+        std::cout << "h -> " << timeit(bench_h, ntimes * 10) << " ns" << std::endl;
+        std::cout << "phi -> " << timeit(bench_phi, ntimes) << " ns" << std::endl;
+        std::cout << "r -> " << timeit(bench_r, ntimes * 10) << " ns" << std::endl;
+        std::cout << "pr -> " << timeit(bench_pr, ntimes) << " ns" << std::endl;
+        std::cout << "t_f_h -> " << timeit(bench_t_from_h, ntimes) << " ns" << std::endl;
+        std::cout << "t_f_phi -> " << timeit(bench_t_from_phi, ntimes) << " ns" << std::endl;
+        std::cout << "t_f_pr -> " << timeit(bench_t_from_pr, ntimes) << " ns" << std::endl;
+        std::cout << "eff_poly -> " << timeit(bench_eff_poly, ntimes) << " ns" << std::endl;
         std::cout << "Pout -> " << timeit(bench_pout, ntimes) << " ns" << std::endl;
     }
 
@@ -226,72 +229,72 @@ namespace thermo
         for (auto& t : t1)
             t = rand() % 30 + 273.15;
 
-        auto bench_Cp = [&]() -> void {
+        auto bench_cp = [&]() -> void {
             for (long i = 0; i < repeat; i++)
             {
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                    res[i] = gas.Cp(t1[i]);
+                    res[i] = gas.cp(t1[i]);
                 }
             };
         };
 
-        auto bench_Gamma = [&]() -> void {
+        auto bench_gamma = [&]() -> void {
             for (long i = 0; i < repeat; i++)
             {
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                    res[i] = gas.Gamma(t1[i]);
+                    res[i] = gas.gamma(t1[i]);
                 }
             };
         };
 
-        auto bench_H = [&]() -> void {
+        auto bench_h = [&]() -> void {
             for (long i = 0; i < repeat; i++)
             {
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                    res[i] = gas.H(t1[i]);
+                    res[i] = gas.h(t1[i]);
                 }
             };
         };
 
-        auto bench_Phi = [&]() -> void {
+        auto bench_phi = [&]() -> void {
             for (long i = 0; i < repeat; i++)
             {
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                    res[i] = gas.Phi(t1[i]);
+                    res[i] = gas.phi(t1[i]);
                 }
             };
         };
 
-        auto bench_R = [&]() -> void {
+        auto bench_r = [&]() -> void {
             for (long i = 0; i < repeat; i++)
             {
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                    res[i] = gas.R();
+                    res[i] = gas.r();
                 }
             };
         };
 
-        auto bench_PR = [&]() -> void {
+        auto bench_pr = [&]() -> void {
             for (long i = 0; i < repeat; i++)
             {
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                    res[i] = gas.PR(t1[i], t2[i], 0.82);
+                    res[i] = gas.pr(t1[i], t2[i], 0.82);
                 }
             };
         };
 
-        auto bench_EffPoly = [&]() -> void {
+        auto bench_eff_poly = [&]() -> void {
             for (long i = 0; i < repeat; i++)
             {
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                    res[i] = gas.EffPoly(p1[i], t1[i], p2[i], t2[i]);
+                    res[i] = gas.eff_poly(p1[i], t1[i], p2[i], t2[i]);
                 }
             };
         };
@@ -301,7 +304,7 @@ namespace thermo
             {
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                    res[i] = gas.PR(t1[i], t2[i], gas.EffPoly(p1[i], t1[i], p2[i], t2[i])) * p1[i];
+                    res[i] = gas.pr(t1[i], t2[i], gas.eff_poly(p1[i], t1[i], p2[i], t2[i])) * p1[i];
                 }
             };
         };
@@ -315,18 +318,18 @@ namespace thermo
     std::cout << #NAME << " --> " << j[#NAME] << " ns";
 
 
-        j["Cp"] = TIME_F(Cp);
-        j["Gamma"] = TIME_F(Gamma);
-        j["H"] = TIME_F(H);
-        j["Phi"] = TIME_F(Phi);
-        j["PR"] = TIME_F(PR);
-        j["EffPoly"] = TIME_F(EffPoly);
+        j["cp"] = TIME_F(cp);
+        j["gamma"] = TIME_F(gamma);
+        j["h"] = TIME_F(h);
+        j["phi"] = TIME_F(phi);
+        j["pr"] = TIME_F(pr);
+        j["eff_poly"] = TIME_F(eff_poly);
         j["Pout"] = TIME_F(Pout);
     }
 
 #ifdef LIBTHERMO_USE_XTENSOR
     template <class G>
-    void benchmark_vector(G&& gas, std::size_t size, long repeat, long number)
+    void benchmark_vector(G&& gas, std::size_t size, unsigned long repeat, unsigned number)
     {
         xt::xtensor<double, 1>::shape_type shape = { size };
         xt::xtensor<double, 1> res(shape, 1.);
@@ -339,93 +342,93 @@ namespace thermo
 
         xt::xtensor<double, 1> eff(shape, 0.82);
 
-        auto bench_Cp = [&]() -> void {
+        auto bench_cp = [&]() -> void {
             for (long i = 0; i < repeat; i++)
             {
-                xt::noalias(res) = gas.Cp(t1);
+                xt::noalias(res) = gas.cp(t1);
             };
         };
 
-        auto bench_Gamma = [&]() -> void {
+        auto bench_gamma = [&]() -> void {
             for (long i = 0; i < repeat; i++)
             {
-                xt::noalias(res) = gas.Gamma(t1);
+                xt::noalias(res) = gas.gamma(t1);
             };
         };
 
-        auto bench_H = [&]() -> void {
+        auto bench_h = [&]() -> void {
             for (long i = 0; i < repeat; i++)
             {
-                xt::noalias(res) = gas.H(t1);
+                xt::noalias(res) = gas.h(t1);
             };
         };
 
-        auto bench_Phi = [&]() -> void {
+        auto bench_phi = [&]() -> void {
             for (long i = 0; i < repeat; i++)
             {
-                xt::noalias(res) = gas.Phi(t1);
+                xt::noalias(res) = gas.phi(t1);
             };
         };
         /*
             auto bench_dPhi = [&]() -> void {
                 for (long i = 0; i < repeat; i++)
                 {
-                    xt::noalias(res) = gas.dPhi(t1, t2);
+                    xt::noalias(res) = gas.dphi(t1, t2);
                 };
             };
         */
         /*
-                auto bench_R = [&](const long &ntimes) -> void
+                auto bench_r = [&](const long &ntimes) -> void
                     { for(long i=0; i<ntimes; i++) { res = gas.template
-           R<xt::xtensor<double, 1> >(); }; };
+           r<xt::xtensor<double, 1> >(); }; };
         */
-        auto bench_PR = [&]() -> void {
+        auto bench_pr = [&]() -> void {
             for (long i = 0; i < repeat; i++)
             {
-                xt::noalias(res) = gas.PR(t1, t2, eff);
+                xt::noalias(res) = gas.pr(t1, t2, eff);
             };
         };
 
-        auto bench_EffPoly = [&]() -> void {
+        auto bench_eff_poly = [&]() -> void {
             for (long i = 0; i < repeat; i++)
             {
-                xt::noalias(res) = gas.EffPoly(p1, t1, p2, t2);
+                xt::noalias(res) = gas.eff_poly(p1, t1, p2, t2);
             };
         };
 
         auto bench_pout = [&]() -> void {
             for (long i = 0; i < repeat; i++)
             {
-                xt::noalias(res) = gas.PR(t1, t2, gas.EffPoly(p1, t1, p2, t2)) * p2;
+                xt::noalias(res) = gas.pr(t1, t2, gas.eff_poly(p1, t1, p2, t2)) * p2;
             };
         };
 
         nlohmann::json j;
         j["N"] = size;
-        j["Cp"] = timeit(bench_Cp, size, repeat, number);
-        j["Gamma"] = timeit(bench_Gamma, size, repeat, number);
-        j["H"] = timeit(bench_H, size, repeat, number);
-        j["Phi"] = timeit(bench_Phi, size, repeat, number);
-        j["PR"] = timeit(bench_PR, size, repeat, number);
-        j["EffPoly"] = timeit(bench_EffPoly, size, repeat, number);
+        j["cp"] = timeit(bench_cp, size, repeat, number);
+        j["gamma"] = timeit(bench_gamma, size, repeat, number);
+        j["h"] = timeit(bench_h, size, repeat, number);
+        j["phi"] = timeit(bench_phi, size, repeat, number);
+        j["pr"] = timeit(bench_pr, size, repeat, number);
+        j["eff_poly"] = timeit(bench_eff_poly, size, repeat, number);
         j["Pout"] = timeit(bench_pout, size, repeat, number);
 
         std::cout << j.dump() << std::endl;
 
-        fs::path results_f = "benchs/results/benchs_results.json";
-        nlohmann::json existing_j;
-        if (fs::exists(results_f))
-        {
-            std::ifstream current_file(results_f);
-            current_file >> existing_j;
-        }
+        // fs::path results_f = "benchs/results/benchs_results.json";
+        // nlohmann::json existing_j;
+        // if (fs::exists(results_f))
+        // {
+        //     std::ifstream current_file(results_f);
+        //     current_file >> existing_j;
+        // }
 
-        nlohmann::json results;
-        results[gas.name()] = merge_results(existing_j[gas.name()], j);
+        // nlohmann::json results;
+        // results[gas.name()] = merge_results(existing_j[gas.name()], j);
 
-        std::ofstream out_file(results_f);
-        out_file << results.dump(2);
-        out_file.close();
+        // std::ofstream out_file(results_f);
+        // out_file << results.dump(2);
+        // out_file.close();
     }
 #endif
 }  // namespace thermo
@@ -440,15 +443,14 @@ main()
 
         std::cout << "\n"
                   << "Reference values" << std::endl;
-        std::cout << "Cp -> " << gas.Cp(Tref) << std::endl;
-        std::cout << "Gamma -> " << gas.Gamma(Tref) << std::endl;
-        std::cout << "H -> " << gas.H(Tref) << std::endl;
-        std::cout << "Phi -> " << gas.Phi(Tref) << std::endl;
-        std::cout << "PR -> " << gas.PR(Tref, 450., 0.82) << std::endl;
-        std::cout << "TFromH -> " << gas.TFromH(gas.H(Tref)) << std::endl;
-        std::cout << "TFromPhi -> " << gas.TFromPhi(gas.Phi(Tref)) << std::endl;
-        std::cout << "TFromPR -> " << gas.TFromPR(gas.PR(Tref, 450., 0.82), Tref, 0.82)
-                  << std::endl;
+        std::cout << "cp -> " << gas.cp(Tref) << std::endl;
+        std::cout << "gamma -> " << gas.gamma(Tref) << std::endl;
+        std::cout << "h -> " << gas.h(Tref) << std::endl;
+        std::cout << "phi -> " << gas.phi(Tref) << std::endl;
+        std::cout << "pr -> " << gas.pr(Tref, 450., 0.82) << std::endl;
+        std::cout << "t_f_h -> " << gas.t_f_h(gas.h(Tref)) << std::endl;
+        std::cout << "t_f_phi -> " << gas.t_f_phi(gas.phi(Tref)) << std::endl;
+        std::cout << "t_f_pr -> " << gas.t_f_pr(gas.pr(Tref, 450., 0.82), Tref, 0.82) << std::endl;
 
         std::cout << "\nSingle value tests" << std::endl;
         // benchmark_single_value(gas, 1000000, 50);
@@ -464,35 +466,31 @@ main()
     }
 
     {
-        RealGas gas(287.05287);
+        PolyGas gas(PolyGasProps<8>({ 0., 0., 0., 0., 0., 0., 0., 1004.4 }, 0., 287.05287));
 
         std::cout << "\n"
                   << "Reference values" << std::endl;
-        std::cout << "Cp -> " << gas.Cp(Tref) << std::endl;
-        std::cout << "Gamma -> " << gas.Gamma(Tref) << std::endl;
-        std::cout << "H -> " << gas.H(Tref) << std::endl;
-        std::cout << "Phi -> " << gas.Phi(Tref) << std::endl;
-        std::cout << "PR -> " << gas.PR(Tref, 450., 0.82) << std::endl;
-        std::cout << "TFromH -> " << gas.TFromH(gas.H(Tref)) << std::endl;
-        std::cout << "TFromPhi -> " << gas.TFromPhi(gas.Phi(Tref)) << std::endl;
-        std::cout << "TFromPR -> " << gas.TFromPR(gas.PR(Tref, 450., 0.82), Tref, 0.82)
+        std::cout << "cp -> " << gas.cp(Tref) << std::endl;
+        std::cout << "gamma -> " << gas.gamma(Tref) << std::endl;
+        std::cout << "h -> " << gas.h(Tref) << std::endl;
+        std::cout << "phi -> " << gas.phi(Tref) << std::endl;
+        std::cout << "pr -> " << gas.pr(Tref, 450., 0.82) << std::endl;
+        std::cout << "t_f_h -> " << gas.t_f_h(gas.h(Tref), 1e-8) << std::endl;
+        std::cout << "t_f_phi -> " << gas.t_f_phi(gas.phi(Tref), 1e-8) << std::endl;
+        std::cout << "t_f_pr -> " << gas.t_f_pr(gas.pr(Tref, 450., 0.82), Tref, 0.82, 1e-8)
                   << std::endl;
 
         std::cout << "\nSingle value tests" << std::endl;
         benchmark_single_value(gas, 100000, 50);
-        /*
-        std::cout << "\nLoop tests" << std::endl;
-        benchmark_loop(gas, 10, 10000000);
-        benchmark_loop(gas, 100, 1000000);
+
+        // std::cout << "\nLoop tests" << std::endl;
+        // benchmark_loop(gas, 10, 10000000);
+        // benchmark_loop(gas, 100, 1000000);
 
 #ifdef LIBTHERMO_USE_XTENSOR
         std::cout << "\nVector tests 1M" << std::endl;
         benchmark_vector(gas, 1000000, 1000, 10);
-
-        std::cout << "\nVector tests 1k" << std::endl;
-        benchmark_vector(gas, 10000, 1000, 100);
 #endif
-*/
     }
     // std::cout << XSIMD_X86_INSTR_SET << std::endl;
 

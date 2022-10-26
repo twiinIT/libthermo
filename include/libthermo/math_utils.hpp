@@ -1,4 +1,4 @@
-// Copyright (c) Adrien DELSALLE
+// Copyright (c) 2021-2022, twiinIT
 //
 // Distributed under the terms of the BSD 3-Clause License.
 //
