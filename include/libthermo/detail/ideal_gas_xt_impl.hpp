@@ -13,7 +13,7 @@
 
 namespace thermo
 {
-    template <class T, IS_XTENSOR>
+    template <class T, IS_XTENSOR_>
     auto IdealGas::gamma(const T& t) const
     {
         // return xt::full_like(t, m_gamma);
@@ -21,32 +21,32 @@ namespace thermo
         return xt::broadcast(m_gamma, t.shape());
     }
 
-    template <class T, IS_XTENSOR>
+    template <class T, IS_XTENSOR_>
     auto IdealGas::cp(const T& t) const
     {
         return xt::broadcast(m_cp, t.shape());
         // return xt::full_like(t, m_cp);
     }
 
-    template <class T, IS_XTENSOR>
+    template <class T, IS_XTENSOR_>
     auto IdealGas::phi(const T& t) const
     {
         return m_cp * xt::log(t);
     }
 
-    template <class T, class E, IS_XTENSOR>
+    template <class T, class E, IS_XTENSOR_>
     auto IdealGas::pr(const T& t1, const T& t2, const E& eff_poly) const
     {
         return xt::exp(xt::log(t2 / t1) * eff_poly * m_cp / m_r);
     }
 
-    template <class T, class E, IS_XTENSOR>
+    template <class T, class E, IS_XTENSOR_>
     auto IdealGas::Tau(const T& p1, const T& p2, const E& eff_poly) const
     {
         return xt::exp(xt::log(p2 / p1) * m_r / (eff_poly * m_cp));
     }
 
-    template <class T, IS_XTENSOR>
+    template <class T, IS_XTENSOR_>
     auto IdealGas::eff_poly(const T& p1, const T& t1, const T& p2, const T& t2) const
     {
         return r() / m_cp * xt::log(p2 / p1) / xt::log(t2 / t1);

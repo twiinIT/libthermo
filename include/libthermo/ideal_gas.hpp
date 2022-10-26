@@ -90,38 +90,38 @@ namespace thermo
         double m_r, m_cp, m_gamma;
     };
 
-    template <class T, IS_NOT_XTENSOR>
+    template <class T, IS_NOT_XTENSOR_>
     auto IdealGas::gamma(const T&) const
     {
         return m_gamma;
     }
 
-    template <class T, IS_NOT_XTENSOR>
+    template <class T, IS_NOT_XTENSOR_>
     auto IdealGas::cp(const T&) const
     {
         return m_cp;
     }
 
 
-    template <class T, IS_NOT_XTENSOR>
+    template <class T, IS_NOT_XTENSOR_>
     auto IdealGas::phi(const T& t) const
     {
         return m_cp * std::log(t);
     }
 
-    template <class T, IS_NOT_XTENSOR>
+    template <class T, IS_NOT_XTENSOR_>
     auto IdealGas::pr(const T& t1, const T& t2, const T& eff_poly) const
     {
         return std::exp(std::log(t2 / t1) * eff_poly * m_cp / m_r);
     }
 
-    template <class T, IS_NOT_XTENSOR>
+    template <class T, IS_NOT_XTENSOR_>
     auto IdealGas::Tau(const T& p1, const T& p2, const T& eff_poly) const
     {
         return std::exp(std::log(p2 / p1) * m_r / (eff_poly * m_cp));
     }
 
-    template <class T, IS_NOT_XTENSOR>
+    template <class T, IS_NOT_XTENSOR_>
     auto IdealGas::eff_poly(const T& p1, const T& t1, const T& p2, const T& t2) const
     {
         return r() / m_cp * log(p2 / p1) / std::log(t2 / t1);
