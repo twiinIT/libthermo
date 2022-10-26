@@ -1,4 +1,4 @@
-// Copyright (c) Adrien DELSALLE
+// Copyright (c) 2021-2022, twiinIT
 //
 // Distributed under the terms of the BSD 3-Clause License.
 //
@@ -7,31 +7,7 @@
 #ifndef LIBTHERMO_THERMO_HPP
 #define LIBTHERMO_THERMO_HPP
 
-#ifdef LIBTHERMO_USE_XTENSOR
-#include "xtensor/xcontainer.hpp"
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xfunction.hpp"
-
-#define IS_NOT_XTENSOR std::enable_if_t<!xt::detail::is_container<T>::value, int> = 0
-#define IS_XTENSOR std::enable_if_t<xt::detail::is_container<T>::value, int> = 0
-#else
-#include <type_traits>
-
-namespace
-{
-    template <class T>
-    struct is_tensor : std::false_type
-    {
-    };
-
-    template <class T>
-    struct is_not_tensor : std::true_type
-    {
-    };
-}
-#define IS_NOT_XTENSOR std::enable_if_t<is_not_tensor<T>::value, int> = 0
-#define IS_XTENSOR std::enable_if_t<is_tensor<T>::value, int> = 0
-#endif
+#include "libthermo/type_traits.hpp"
 
 #include <cmath>
 #include <string>
@@ -46,87 +22,64 @@ namespace thermo
     public:
         using derived_type = Th;
 
-        inline const std::string& name() const
-        {
-            return m_name;
-        };
-
         /// Proxy method to compute the specific heat ratio.
         template <class T>
-        auto SpecificHeatRatio(const T& t) const
+        auto specific_heat_ratio(const T& t) const
         {
-            return derived_thermo().Gamma(t);
+            return derived_thermo().gamma(t);
         };
 
         /// Proxy method to compute the specific heat pressure.
         template <class T>
-        auto SpecificHeatPressure(const T& t) const
+        auto specific_heat_pressure(const T& t) const
         {
-            return derived_thermo().Cp(t);
+            return derived_thermo().cp(t);
         };
 
         /// Proxy method to compute the enthalpy.
         template <class T>
-        auto Enthalpy(const T& t) const
+        auto enthalpy(const T& t) const
         {
-            return derived_thermo().H(t);
+            return derived_thermo().h(t);
         };
 
         /// Proxy method to compute the entropy.
         template <class T>
-        auto Entropy(const T& t) const
+        auto entropy(const T& t) const
         {
-            return derived_thermo().Phi(t);
+            return derived_thermo().phi(t);
         };
 
         /// Proxy method to get the gas constant.
-        double Constant() const
+        double constant() const
         {
-            return derived_thermo().R();
+            return derived_thermo().r();
         };
 
         /// Proxy method to get the pressure ratio from initiale and finale temps, and polytropic
         /// efficiency.
         template <class T, class E = T>
-        auto PressureRatio(const T& t1, const T& t2, const E& eff_poly) const
+        auto pressure_ratio(const T& t1, const T& t2, const E& eff_poly) const
         {
-            return derived_thermo().PR(t1, t2, eff_poly);
+            return derived_thermo().pr(t1, t2, eff_poly);
         };
 
-        /*
-                /// Proxy method to get the temperature from pressure ratio, initial temperature,
-           and
-                /// polytropic efficiency.
-                template <class T, class E = T>
-                auto TempFromPR(const T& pr, const T& p2, const E& eff_poly) const
-                {
-                    return derived_thermo().Tau(p1, p2, eff_poly);
-                };
-        */
         /// Proxy method to get the polytropic efficiency of a transformation between initial and
         /// final pressure and temps.
         template <class T>
-        auto PolytropicEfficiency(const T& p1, const T& t1, const T& p2, const T& t2) const
+        auto polytropic_efficiency(const T& p1, const T& t1, const T& p2, const T& t2) const
         {
-            return derived_thermo().EffPoly(p1, t1, p2, t2);
+            return derived_thermo().eff_poly(p1, t1, p2, t2);
         }
 
     protected:
         Thermo() = default;
-        Thermo(const std::string& name_);
         ~Thermo() = default;
 
         const derived_type& derived_thermo() const noexcept;
         derived_type& derived_thermo() noexcept;
-
-        const std::string m_name = "";
     };
 
-    template <class T>
-    inline Thermo<T>::Thermo(const std::string& name_)
-        : m_name(name_)
-    {
-    }
 
     template <class T>
     inline auto Thermo<T>::derived_thermo() const noexcept -> const derived_type&
@@ -147,37 +100,41 @@ namespace thermo
     public:
         ThermoInterface() = default;
 
-        virtual double Gamma(double t) const = 0;
-        virtual Vec Gamma(const Vec& t) const = 0;
+        virtual double gamma(double t) const = 0;
+        virtual Vec gamma(const Vec& t) const = 0;
 
-        virtual double Cp(double t) const = 0;
-        virtual Vec Cp(const Vec& t) const = 0;
+        virtual double cp(double t) const = 0;
+        virtual Vec cp(const Vec& t) const = 0;
 
-        virtual double Phi(double t) const = 0;
-        virtual Vec Phi(const Vec& t) const = 0;
+        virtual double phi(double t) const = 0;
+        virtual Vec phi(const Vec& t) const = 0;
 
-        virtual double PR(double t1, double t2, double eff_poly) const = 0;
-        virtual Vec PR(const Vec& t1, const Vec& t2, const Vec& eff_poly) const = 0;
+        virtual double pr(double t1, double t2, double eff_poly) const = 0;
+        virtual Vec pr(const Vec& t1, const Vec& t2, const Vec& eff_poly) const = 0;
 
-        virtual double EffPoly(double p1, double t1, double p2, double t2) const = 0;
-        virtual Vec EffPoly(const Vec& p1, const Vec& t1, const Vec& p2, const Vec& t2) const = 0;
+        virtual double eff_poly(double p1, double t1, double p2, double t2) const = 0;
+        virtual Vec eff_poly(const Vec& p1, const Vec& t1, const Vec& p2, const Vec& t2) const = 0;
 
-        virtual double H(double t) const = 0;
-        virtual Vec H(const Vec& t) const = 0;
+        virtual double h(double t) const = 0;
+        virtual Vec h(const Vec& t) const = 0;
 
-        virtual double StaticT(double tt, double mach) const = 0;
-        // virtual Vec StaticT(const Vec& tt, const Vec& mach) const = 0;
+        virtual double static_t(double tt, double mach, double tol, std::size_t max_iter) const = 0;
+        // virtual Vec static_t(const Vec& tt, const Vec& mach) const = 0;
 
-        virtual double TFromH(double h) const = 0;
-        // virtual Vec TFromH(const Vec& h) const = 0;
+        virtual double t_f_h(double h, double tol, std::size_t max_iter) const = 0;
+        // virtual Vec t_f_h(const Vec& h) const = 0;
 
-        virtual double TFromPhi(double phi) const = 0;
-        //  virtual Vec TFromPhi(const Vec& phi) const = 0;
+        virtual double t_f_phi(double phi, double tol, std::size_t max_iter) const = 0;
+        //  virtual Vec t_f_phi(const Vec& phi) const = 0;
 
-        virtual double TFromPR(double pr, double t1, double eff_poly) const = 0;
-        // virtual Vec TFromPR(const Vec& pr, const Vec& t1, const Vec& eff_poly) const = 0;
+        virtual double t_f_pr(
+            double pr, double t1, double eff_poly, double tol, std::size_t max_iter) const = 0;
+        // virtual Vec t_f_pr(const Vec& pr, const Vec& t1, const Vec& eff_poly) const = 0;
 
-        virtual double R() const = 0;
+        virtual double mach_f_wqa(
+            double pt, double tt, double wqa, double tol, std::size_t max_iter) const = 0;
+
+        virtual double r() const = 0;
     };
 }
 
