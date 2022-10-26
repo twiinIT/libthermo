@@ -1,0 +1,15 @@
+name: pythermo-dev
+channels:
+  - conda-forge
+dependencies:
+  - cxx-compiler
+  - cmake
+  - ninja
+  - gtest
+  - gmock
+  - pybind11
+  - pytest
+  - xtensor
+  - xsimd
+  - xtensor-python
+  - numpy

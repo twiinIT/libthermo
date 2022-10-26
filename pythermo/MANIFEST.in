@@ -1,0 +1,2 @@
+include pythermo/pythermo_core*
+exclude src/

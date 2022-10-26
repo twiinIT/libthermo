@@ -39,6 +39,7 @@ set(libthermo_headers
     ${LIBTHERMO_INCLUDE_DIR}/libthermo/ideal_gas.hpp
     ${LIBTHERMO_INCLUDE_DIR}/libthermo/poly_gas.hpp
     ${LIBTHERMO_INCLUDE_DIR}/libthermo/math_utils.hpp
+    ${LIBTHERMO_INCLUDE_DIR}/libthermo/version.hpp
 )
 
 add_library(libthermo INTERFACE)
