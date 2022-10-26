@@ -1,5 +1,8 @@
 # History
 
-## Unreleased
+## 0.1.0
 
-- Initial implementation
+- add `Thermo` interface
+- add `IdealGas` and `PolyGas` implementations
+- support both scalar and vector operations on most of the calculations
+- implement efficient `polyval` method for polynomial evaluations
