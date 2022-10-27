@@ -31,8 +31,10 @@ target_link_libraries(pythermo_core
         xtensor-python tbb
 )
 target_include_directories(pythermo_core PUBLIC ${NUMPY_INCLUDE_DIRS})
-
 target_compile_options(pythermo_core PUBLIC "-march=native")
+if (WIN32)
+    target_compile_definitions(pythermo_core PUBLIC NOMINMAX)
+endif ()
 
 install(TARGETS pythermo_core
         LIBRARY DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/pythermo/)
