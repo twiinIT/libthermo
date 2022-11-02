@@ -28,6 +28,20 @@ namespace thermo
         };
     };
 
+    /**
+     * Domain exception
+     *
+     * This exception is thrown when a numerical algorithm
+     * is called with inputs outside a valid domain.
+     */
+    class domain_error : public std::exception
+    {
+    public:
+        inline const char* what() const noexcept
+        {
+            return "Algorithm called outside valid domain";
+        };
+    };
 }
 
 #endif

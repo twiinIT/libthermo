@@ -12,6 +12,7 @@ set(CMAKE_MODULE_PATH
 
 find_package(xtensor-python REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
+find_package(TBB REQUIRED)
 find_package(NumPy REQUIRED)
 find_package(Python COMPONENTS Interpreter Development)
 
@@ -28,10 +29,11 @@ target_link_libraries(pythermo_core
     PUBLIC
         libthermo
     PRIVATE
-        xtensor-python tbb
+        xtensor-python
+        TBB::tbb
 )
 target_include_directories(pythermo_core PUBLIC ${NUMPY_INCLUDE_DIRS})
-target_compile_options(pythermo_core PUBLIC "-march=native")
+
 if (WIN32)
     target_compile_definitions(pythermo_core PUBLIC NOMINMAX)
 endif ()

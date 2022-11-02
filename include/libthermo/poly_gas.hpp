@@ -13,6 +13,9 @@
 #include "libthermo/math_utils.hpp"
 #include "libthermo/detail/polyval.hpp"
 
+#include <boost/math/tools/roots.hpp>
+
+#include <cmath>
 #include <vector>
 #include <exception>
 
@@ -257,6 +260,7 @@ namespace thermo
             }
 
             cp_ = cp(ts);
+            // approximation: gamma is supposed ~constant with Ts
             ts -= x / (-cp_ - v * mach * std::sqrt(gam * r_) / (2. * std::sqrt(ts)));
         }
 
@@ -346,38 +350,40 @@ namespace thermo
         using namespace detail;
         using namespace math;
 
-        double ps, ts, hs, ht, v, r_, cp_, x, der, rho_v;
+        double ps, ts, v, r_;
         bool converged = false;
 
         r_ = r();
-        ht = h(tt);
 
-        ts = static_t(tt, 0.5, tol);
-        x = 1.;
+        double ts_crit = static_t(tt, 1., tol);
+        double ps_crit = pt * pr(tt, ts_crit, 1.);
+        double wqa_crit = ps_crit / (r_ * ts_crit) * std::sqrt(gamma(ts_crit) * r_ * ts_crit);
 
-        for (auto i = 0; i < max_iter; ++i)
+        if (wqa < 0. || wqa > wqa_crit)
+            throw domain_error();
+
+        auto err_v = [&](double mach) -> double
         {
-            hs = h(ts);
-            v = std::sqrt(2 * (ht - hs));
-            ps = pr(tt, ts, 1.) * pt;
-            rho_v = ps / (ts * r_) * v;
+            ts = static_t(tt, mach, tol);
+            ps = pt * pr(tt, ts, 1.);
+            v = mach * std::sqrt(gamma(ts) * r_ * ts);
+            return ps / (r_ * ts) * v - wqa;
+        };
 
-            x = rho_v / wqa - 1.;
-            if (std::abs(x) < tol)
+        double guess = wqa * std::sqrt(r_ * tt / gamma(tt)) / pt;
+        boost::uintmax_t niter = max_iter;
+        auto res = boost::math::tools::toms748_solve(
+            err_v,
+            0.,
+            1.,
+            [&tol](const auto& a, const auto& b) -> bool
             {
-                converged = true;
-                break;
-            }
+                using std::fabs;
+                return fabs(a - b) / (std::min)(fabs(a), fabs(b)) <= tol;
+            },
+            niter);
 
-            cp_ = cp(ts);
-            der = (rho_v / wqa) * (cp_ * (1.0 / (r_ * ts) - 1.0 / square(v)) - 1.0 / ts);
-            ts -= x / der;
-        }
-
-        if (!converged)
-            throw convergence_error();
-
-        return v / std::sqrt(gamma(ts) * r_ * ts);
+        return res.first;
     }
 }
 
