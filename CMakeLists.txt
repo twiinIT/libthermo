@@ -52,6 +52,8 @@ target_include_directories(
         $<INSTALL_INTERFACE:include>
 )
 
+find_package(Boost COMPONENTS math)
+
 if (LIBTHERMO_USE_XTENSOR)
     find_package(xtensor REQUIRED)
     target_compile_definitions(libthermo
@@ -60,6 +62,11 @@ if (LIBTHERMO_USE_XTENSOR)
     )
     target_link_libraries(libthermo INTERFACE xtensor)
 endif ()
+
+target_link_libraries(libthermo
+    PUBLIC           
+        ${Boost_LIBRARIES}
+)
 
 install(TARGETS libthermo 
         EXPORT ${PROJECT_NAME}-targets)

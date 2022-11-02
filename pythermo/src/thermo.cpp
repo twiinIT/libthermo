@@ -221,4 +221,5 @@ thermo_base(py::module_& m)
           py::arg("final temperature"));
 
     py::register_exception<convergence_error>(m, "ConvergenceError", PyExc_RuntimeError);
+    py::register_exception<domain_error>(m, "DomainError", PyExc_RuntimeError);
 }
