@@ -1,5 +1,9 @@
 # History
 
+## 0.1.2
+
+- improve `mach_f_wqa` iterative function robustness and performance
+
 ## 0.1.1
 
 - fix SFINAE error preventing to build on gcc 12 or MSVC
