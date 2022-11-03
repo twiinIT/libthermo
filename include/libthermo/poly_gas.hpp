@@ -350,10 +350,11 @@ namespace thermo
         using namespace detail;
         using namespace math;
 
-        double ps, ts, v, r_;
+        double ps, ts, ht, v, r_;
         bool converged = false;
 
         r_ = r();
+        ht = h(tt);
 
         double ts_crit = static_t(tt, 1., tol);
         double ps_crit = pt * pr(tt, ts_crit, 1.);
@@ -362,28 +363,29 @@ namespace thermo
         if (wqa < 0. || wqa > wqa_crit)
             throw domain_error();
 
-        auto err_v = [&](double mach) -> double
+        auto err_v = [&](double ts) -> double
         {
-            ts = static_t(tt, mach, tol);
             ps = pt * pr(tt, ts, 1.);
-            v = mach * std::sqrt(gamma(ts) * r_ * ts);
+            v = std::sqrt(2 * (ht - h(ts)));
             return ps / (r_ * ts) * v - wqa;
         };
 
-        double guess = wqa * std::sqrt(r_ * tt / gamma(tt)) / pt;
         boost::uintmax_t niter = max_iter;
         auto res = boost::math::tools::toms748_solve(
             err_v,
-            0.,
-            1.,
+            ts_crit,
+            tt,
             [&tol](const auto& a, const auto& b) -> bool
             {
                 using std::fabs;
                 return fabs(a - b) / (std::min)(fabs(a), fabs(b)) <= tol;
             },
             niter);
+        ts = res.first;
+        ps = pt * pr(tt, ts, 1.);
+        v = std::sqrt(2 * (ht - h(ts)));
 
-        return res.first;
+        return v / std::sqrt(gamma(ts) * r_ * ts);
     }
 }
 
