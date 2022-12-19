@@ -112,6 +112,7 @@ void
 ideal_gas(py::module_& m)
 {
     using array_t = xt::pyarray<double, xt::layout_type::row_major>;
+    using namespace py::literals;
 
     py::class_<PyIdealGas, ThermoInterface<array_t>, std::shared_ptr<PyIdealGas>>(m, "IdealGas")
         .def(py::init<double, double>())
@@ -185,7 +186,6 @@ ideal_gas(py::module_& m)
              py::overload_cast<const array_t&>(&PyIdealGas::cp, py::const_),
              "Specific heat pressure",
              py::arg("temperature"))
-
         .def("pressure_ratio",
              py::overload_cast<double, double, double>(&PyIdealGas::pr, py::const_),
              "Pressure Ratio",
@@ -205,7 +205,6 @@ ideal_gas(py::module_& m)
              py::arg("initiale temperature"),
              py::arg("finale temperature"),
              py::arg("polytropic efficiency"))
-
         .def("eff_poly",
              py::overload_cast<double, double, double, double>(&PyIdealGas::eff_poly, py::const_),
              "Polytropic efficiency",
@@ -232,11 +231,17 @@ ideal_gas(py::module_& m)
              py::overload_cast<const array_t&, const array_t&, const array_t&, const array_t&>(
                  &PyIdealGas::eff_poly, py::const_),
              "Polytropic efficiency",
-             py::arg("initial pressure"),
-             py::arg("initial temperature"),
-             py::arg("final pressure"),
-             py::arg("final temperature"))
-
+             "initial pressure"_a,
+             "initial temperature"_a,
+             "final pressure"_a,
+             "final temperature"_a)
+        .def("static_t",
+             &PyIdealGas::static_t,
+             "Static temperature",
+             "tt"_a,
+             "mach"_a,
+             "tol"_a,
+             "max_iter"_a = 30)
         .def("t_from_h",
              &PyIdealGas::t_f_h,
              "Temperature from enthalpy",
