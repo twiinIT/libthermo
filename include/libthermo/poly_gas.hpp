@@ -30,6 +30,7 @@ namespace thermo
         PolyGasProps(const arr_t& cp_coeffs_, double h0_, double r_);
 
         std::array<double, D> cp_coeffs;
+        std::array<double, D - 1> dcp_coeffs;
         std::array<double, D + 1> h_coeffs;
         std::array<double, D> phi_coeffs;
         double r, phi_log;
@@ -42,6 +43,7 @@ namespace thermo
     {
         for (auto i = 0; i < D - 1; ++i)
         {
+            dcp_coeffs[i] = cp_coeffs[i] * (D - i - 1);
             h_coeffs[i] = cp_coeffs[i] / (D - i);
             phi_coeffs[i] = cp_coeffs[i] / (D - i - 1);
         }
@@ -234,13 +236,16 @@ namespace thermo
                                      std::size_t max_iter) const
     {
         using namespace math;
+        using namespace detail;
 
-        double gam, ts, hs, v, cp_;
+        double gam, dgam, ts, hs, v, cp_, dcp;
         bool converged = false;
+        std::size_t iter;
 
         double ht = h(tt);
         double r_ = r();
         double x = 1.;
+        double mach2 = pow(mach, 2.);
 
         // initialize using approximations
         gam = gamma(tt);
@@ -256,12 +261,14 @@ namespace thermo
             if (std::abs(x / ht) < tol)
             {
                 converged = true;
+                iter = i;
                 break;
             }
 
+            dcp = polyval(ts, gas.dcp_coeffs);
             cp_ = cp(ts);
-            // approximation: gamma is supposed ~constant with Ts
-            ts -= x / (-cp_ - v * mach * std::sqrt(gam * r_) / (2. * std::sqrt(ts)));
+            dgam = -r_ * dcp / pow(cp_ - r_, 2.);
+            ts -= x / (-cp_ - 0.5 * mach2 * r_ * (gam + ts * dgam));
         }
 
         if (!converged)
