@@ -22,49 +22,95 @@
 
 using array_t = xt::pyarray<double, xt::layout_type::row_major>;
 
-class PyThermo : public thermo::ThermoInterface<array_t>
+class PyThermoInterface
+    : public thermo::ThermoExtendedInterface<double>
+    , public thermo::ThermoInterface<array_t>
+{
+};
+
+
+#define FORWARD_CALL(tmpl, name, type, ...)                                                                            \
+    type name(const type& t) const override                                                                            \
+    {                                                                                                                  \
+        return tmpl::name(t);                                                                                          \
+    }
+
+template <class G>
+class PyThermoHelper
+    : public PyThermoInterface
+    , protected G
 {
 public:
-    using thermo::ThermoInterface<array_t>::ThermoInterface;
+    using G::G;
 
-    double gamma(double t) const override;
-    array_t gamma(const array_t& t) const override;
+    FORWARD_CALL(G, gamma, double);
+    FORWARD_CALL(G, gamma, array_t);
 
-    double cp(double t) const override;
-    array_t cp(const array_t& t) const;
+    FORWARD_CALL(G, cp, double);
+    FORWARD_CALL(G, cp, array_t);
 
-    double h(double t) const override;
-    array_t h(const array_t& t) const override;
+    FORWARD_CALL(G, h, double);
+    FORWARD_CALL(G, h, array_t);
 
-    double phi(double t) const override;
-    array_t phi(const array_t& t) const override;
+    FORWARD_CALL(G, phi, double);
+    FORWARD_CALL(G, phi, array_t);
 
-    double pr(double t1, double t2, double eff_poly) const override;
-    array_t pr(const array_t& t1, const array_t& t2, const array_t& eff_poly) const override;
+    double r() const override
+    {
+        return G::r();
+    }
 
-    double eff_poly(double p1, double t1, double p2, double t2) const override;
-    array_t eff_poly(const array_t& p1,
-                     const array_t& t1,
-                     const array_t& p2,
-                     const array_t& t2) const override;
+    double pr(const double& t1, const double& t2, const double& eff_poly) const override
+    {
+        return G::pr(t1, t2, eff_poly);
+    }
+    array_t pr(const array_t& t1, const array_t& t2, const array_t& eff_poly) const override
+    {
+        return G::pr(t1, t2, eff_poly);
+    }
 
-    double r() const override;
+    double eff_poly(const double& p1, const double& t1, const double& p2, const double& t2) const override
+    {
+        return G::eff_poly(p1, t1, p2, t2);
+    }
+    array_t eff_poly(const array_t& p1, const array_t& t1, const array_t& p2, const array_t& t2) const override
+    {
+        return G::eff_poly(p1, t1, p2, t2);
+    }
 
-    double t_f_pr(double pr_,
-                  double t1_,
-                  double eff_poly_,
+    double static_t(const double& t, const double& mach) const
+    {
+        return G::static_t(t, mach);
+    }
+
+    double static_t(const double& t, const double& mach, double tol, const std::size_t max_iter = 30) const override
+    {
+        return G::static_t(t, mach, tol, max_iter);
+    }
+
+    double t_f_pr(const double& pr,
+                  const double& t1,
+                  const double& eff_poly,
                   double tol,
-                  std::size_t max_iter = 30) const override;
-
-    double t_f_h(double h_, double tol, std::size_t max_iter = 30) const override;
-
-    double t_f_phi(double phi_, double tol, std::size_t max_iter = 30) const override;
-
-    double static_t(double tt_, double mach_, double tol, std::size_t max_iter = 30) const override;
-
+                  std::size_t max_iter = 30) const override
+    {
+        return G::t_f_pr(pr, t1, eff_poly, tol, max_iter);
+    }
+    double t_f_h(const double& h, double tol, std::size_t max_iter = 30) const override
+    {
+        return G::t_f_h(h, tol, max_iter);
+    }
+    double t_f_phi(const double& phi, double tol, std::size_t max_iter = 30) const override
+    {
+        return G::t_f_phi(phi, tol, max_iter);
+    }
     double mach_f_wqa(
-        double pt, double tt, double wqa, double tol, std::size_t max_iter = 30) const override;
+        const double& pt, const double& tt, const double& wqa, double tol, std::size_t max_iter = 30) const override
+    {
+        return G::mach_f_wqa(pt, tt, wqa, tol, max_iter);
+    }
 };
+
 
 void
 thermo_base(pybind11::module_& m);

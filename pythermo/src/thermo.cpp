@@ -14,211 +14,233 @@
 namespace py = pybind11;
 using namespace thermo;
 
-double
-PyThermo::gamma(double t) const
+/* Defines the C++ trampolines to allow Python users to
+ * define their own thermo and use it in code accepting
+ * a PyThermoInterface
+ */
+class PyThermo : public PyThermoInterface
 {
-    PYBIND11_OVERLOAD_PURE(double, ThermoInterface, gamma, t);
+public:
+    double gamma(const double& t) const override;
+    array_t gamma(const array_t& t) const override;
+
+    double cp(const double& t) const override;
+    array_t cp(const array_t& t) const;
+
+    double h(const double& t) const override;
+    array_t h(const array_t& t) const override;
+
+    double phi(const double& t) const override;
+    array_t phi(const array_t& t) const override;
+
+    double pr(const double& t1, const double& t2, const double& eff_poly) const override;
+    array_t pr(const array_t& t1, const array_t& t2, const array_t& eff_poly) const override;
+
+    double eff_poly(const double& p1, const double& t1, const double& p2, const double& t2) const override;
+    array_t eff_poly(const array_t& p1, const array_t& t1, const array_t& p2, const array_t& t2) const override;
+
+    double r() const override;
+
+    double t_f_pr(const double& pr_,
+                  const double& t1_,
+                  const double& eff_poly_,
+                  double tol,
+                  std::size_t max_iter = 30) const override;
+
+    double t_f_h(const double& h_, double tol, std::size_t max_iter = 30) const override;
+
+    double t_f_phi(const double& phi_, double tol, std::size_t max_iter = 30) const override;
+
+    double static_t(const double& tt_, const double& mach_, double tol, std::size_t max_iter = 30) const override;
+
+    double mach_f_wqa(
+        const double& pt, const double& tt, const double& wqa, double tol, std::size_t max_iter = 30) const override;
+};
+
+double
+PyThermo::gamma(const double& t) const
+{
+    PYBIND11_OVERLOAD_PURE(double, ThermoInterface<double>, gamma, t);
 }
 
 array_t
 PyThermo::gamma(const array_t& t) const
 {
-    PYBIND11_OVERLOAD_PURE(array_t, ThermoInterface, v_gamma, t);
+    PYBIND11_OVERLOAD_PURE(array_t, ThermoInterface<array_t>, v_gamma, t);
 }
 
 double
-PyThermo::cp(double t) const
+PyThermo::cp(const double& t) const
 {
-    PYBIND11_OVERLOAD_PURE(double, ThermoInterface, cp, t);
+    PYBIND11_OVERLOAD_PURE(double, ThermoInterface<double>, cp, t);
 }
 
 array_t
 PyThermo::cp(const array_t& t) const
 {
-    PYBIND11_OVERLOAD_PURE(array_t, ThermoInterface, v_cp, t);
+    PYBIND11_OVERLOAD_PURE(array_t, ThermoInterface<array_t>, v_cp, t);
 }
 
 double
-PyThermo::h(double t) const
+PyThermo::h(const double& t) const
 {
-    PYBIND11_OVERLOAD_PURE(double, ThermoInterface, h, t);
+    PYBIND11_OVERLOAD_PURE(double, ThermoInterface<double>, h, t);
 }
 
 array_t
 PyThermo::h(const array_t& t) const
 {
-    PYBIND11_OVERLOAD_PURE(array_t, ThermoInterface, v_h, t);
+    PYBIND11_OVERLOAD_PURE(array_t, ThermoInterface<array_t>, v_h, t);
 }
 
 double
-PyThermo::phi(double t) const
+PyThermo::phi(const double& t) const
 {
-    PYBIND11_OVERLOAD_PURE(double, ThermoInterface, phi, t);
+    PYBIND11_OVERLOAD_PURE(double, ThermoInterface<double>, phi, t);
 }
 
 array_t
 PyThermo::phi(const array_t& t) const
 {
-    PYBIND11_OVERLOAD_PURE(array_t, ThermoInterface, v_phi, t);
+    PYBIND11_OVERLOAD_PURE(array_t, ThermoInterface<array_t>, v_phi, t);
 }
 
 double
-PyThermo::pr(double t1, double t2, double eff_poly) const
+PyThermo::pr(const double& t1, const double& t2, const double& eff_poly) const
 {
-    PYBIND11_OVERLOAD_PURE(double, ThermoInterface, pr, t1, t2, eff_poly);
+    PYBIND11_OVERLOAD_PURE(double, ThermoInterface<double>, pr, t1, t2, eff_poly);
 }
 
 array_t
 PyThermo::pr(const array_t& t1, const array_t& t2, const array_t& eff_poly) const
 {
-    PYBIND11_OVERLOAD_PURE(array_t, ThermoInterface, v_pr, t1, t2, eff_poly);
+    PYBIND11_OVERLOAD_PURE(array_t, ThermoInterface<array_t>, v_pr, t1, t2, eff_poly);
 }
 
 double
-PyThermo::eff_poly(double p1, double t1, double p2, double t2) const
+PyThermo::eff_poly(const double& p1, const double& t1, const double& p2, const double& t2) const
 {
-    PYBIND11_OVERLOAD_PURE(double, ThermoInterface, eff_poly, p1, t1, p2, t2);
+    PYBIND11_OVERLOAD_PURE(double, ThermoInterface<double>, eff_poly, p1, t1, p2, t2);
 }
 
 array_t
 PyThermo::eff_poly(const array_t& p1, const array_t& t1, const array_t& p2, const array_t& t2) const
 {
-    PYBIND11_OVERLOAD_PURE(array_t, ThermoInterface, v_eff_poly, p1, t1, p2, t2);
+    PYBIND11_OVERLOAD_PURE(array_t, ThermoInterface<array_t>, v_eff_poly, p1, t1, p2, t2);
 }
 
 double
 PyThermo::r() const
 {
-    PYBIND11_OVERLOAD_PURE(double, ThermoInterface, r, );
+    PYBIND11_OVERLOAD_PURE(double, ThermoInterface<double>, r, );
 }
 
 double
-PyThermo::t_f_pr(double pr_, double t1_, double eff_poly_, double tol, std::size_t max_iter) const
+PyThermo::t_f_pr(const double& pr_, const double& t1_, const double& eff_poly_, double tol, std::size_t max_iter) const
 {
-    PYBIND11_OVERLOAD_PURE(double, ThermoInterface, t_from_pr, pr_, t1_, eff_poly_, tol, max_iter);
+    PYBIND11_OVERLOAD_PURE(double, ThermoExtendedInterface<double>, t_from_pr, pr_, t1_, eff_poly_, tol, max_iter);
 }
 
 double
-PyThermo::t_f_h(double h_, double tol, std::size_t max_iter) const
+PyThermo::t_f_h(const double& h_, double tol, std::size_t max_iter) const
 {
-    PYBIND11_OVERLOAD_PURE(double, ThermoInterface, t_from_h, h_, tol, max_iter);
+    PYBIND11_OVERLOAD_PURE(double, ThermoExtendedInterface<double>, t_from_h, h_, tol, max_iter);
 }
 
 double
-PyThermo::t_f_phi(double phi_, double tol, std::size_t max_iter) const
+PyThermo::t_f_phi(const double& phi_, double tol, std::size_t max_iter) const
 {
-    PYBIND11_OVERLOAD_PURE(double, ThermoInterface, t_from_phi, phi_, tol, max_iter);
+    PYBIND11_OVERLOAD_PURE(double, ThermoExtendedInterface<double>, t_from_phi, phi_, tol, max_iter);
 }
 
 double
-PyThermo::static_t(double tt_, double mach_, double tol, std::size_t max_iter) const
+PyThermo::static_t(const double& tt_, const double& mach_, double tol, std::size_t max_iter) const
 {
-    PYBIND11_OVERLOAD_PURE(double, ThermoInterface, static_t, tt_, mach_, tol, max_iter);
+    PYBIND11_OVERLOAD_PURE(double, ThermoExtendedInterface<double>, static_t, tt_, mach_, tol, max_iter);
 }
 
 double
-PyThermo::mach_f_wqa(double pt_, double tt_, double wqa_, double tol, std::size_t max_iter) const
+PyThermo::mach_f_wqa(const double& pt_, const double& tt_, const double& wqa_, double tol, std::size_t max_iter) const
 {
-    PYBIND11_OVERLOAD_PURE(double, ThermoInterface, mach_f_wqa, pt_, tt_, wqa_, tol, max_iter);
+    PYBIND11_OVERLOAD_PURE(double, ThermoExtendedInterface<double>, mach_f_wqa, pt_, tt_, wqa_, tol, max_iter);
 }
+
+template class thermo::ThermoExtendedInterface<double>;
+template class thermo::ThermoInterface<array_t>;
+
 
 void
 thermo_base(py::module_& m)
 {
-    // ==== Binding of the abstract Gas class ==== //
-    auto g
-        = py::class_<ThermoInterface<array_t>, PyThermo, std::shared_ptr<ThermoInterface<array_t>>>(
-            m, "Thermo");
+    using namespace py::literals;
+
+    py::class_<thermo::ThermoExtendedInterface<double>, std::shared_ptr<thermo::ThermoExtendedInterface<double>>>(
+        m, "ThermoExtendedInterfaceDouble");
+
+
+    py::class_<thermo::ThermoInterface<array_t>, std::shared_ptr<thermo::ThermoInterface<array_t>>>(
+        m, "ThermoInterfaceArr");
+
+    //  Binding of the abstract/interface class PyThermoInterface
+    auto g = py::class_<PyThermoInterface,
+                        thermo::ThermoExtendedInterface<double>,
+                        thermo::ThermoInterface<array_t>,
+                        PyThermo,
+                        std::shared_ptr<PyThermoInterface>>(m, "Thermo");
     g.def(py::init<>());
 
-    g.def_property_readonly("constant", &ThermoInterface<array_t>::r, "Gas constant");
-    g.def_property_readonly("r", &ThermoInterface<array_t>::r, "Gas constant");
+    g.def_property_readonly("constant", &ThermoInterface<double>::r, "Gas constant");
+    g.def_property_readonly("r", &ThermoInterface<double>::r, "Gas constant");
 
-    g.def("enthalpy",
-          py::overload_cast<double>(&ThermoInterface<array_t>::h, py::const_),
-          "Enthalpy",
-          py::arg("temperature"));
-    g.def("enthalpy",
-          py::overload_cast<const array_t&>(&ThermoInterface<array_t>::h, py::const_),
-          "Enthalpy",
-          py::arg("temperature"));
-    g.def("h",
-          py::overload_cast<double>(&ThermoInterface<array_t>::h, py::const_),
-          "Enthalpy",
-          py::arg("temperature"));
-    g.def("h",
-          py::overload_cast<const array_t&>(&ThermoInterface<array_t>::h, py::const_),
-          "Enthalpy",
-          py::arg("temperature"));
+    g.def("enthalpy", &ThermoInterface<double>::h, "Enthalpy", "temperature"_a);
+    g.def("enthalpy", &ThermoInterface<array_t>::h, "Enthalpy", "temperature"_a);
+    g.def("h", &ThermoInterface<double>::h, "Enthalpy", "temperature"_a);
+    g.def("h", &ThermoInterface<array_t>::h, "Enthalpy", "temperature"_a);
 
-    g.def("entropy",
-          py::overload_cast<double>(&ThermoInterface<array_t>::phi, py::const_),
-          "Entropy",
-          py::arg("temperature"));
-    g.def("phi",
-          py::overload_cast<double>(&ThermoInterface<array_t>::phi, py::const_),
-          "Entropy",
-          py::arg("temperature"));
+    g.def("entropy", &ThermoInterface<double>::phi, "Entropy", "temperature"_a);
+    g.def("entropy", &ThermoInterface<array_t>::phi, "Entropy", "temperature"_a);
+    g.def("phi", &ThermoInterface<double>::phi, "Entropy", "temperature"_a);
+    g.def("phi", &ThermoInterface<array_t>::phi, "Entropy", "temperature"_a);
 
-    //.def("specific_heat_ratio",
-    //    &ThermoInterface::specific_heat_ratio,
-    //       "Specific heat ratio",
-    //     py::arg("temperature"))
-    g.def("specific_heat_ratio",
-          py::overload_cast<double>(&ThermoInterface<array_t>::gamma, py::const_),
-          "Specific heat ratio",
-          py::arg("temperature"));
-    g.def("specific_heat_ratio",
-          py::overload_cast<const array_t&>(&ThermoInterface<array_t>::gamma, py::const_),
-          "Specific heat ratio",
-          py::arg("temperature"));
-    g.def("gamma",
-          py::overload_cast<double>(&ThermoInterface<array_t>::gamma, py::const_),
-          "Specific heat ratio",
-          py::arg("temperature"));
-    g.def("gamma",
-          py::overload_cast<const array_t&>(&ThermoInterface<array_t>::gamma, py::const_),
-          "Specific heat ratio",
-          py::arg("temperature"));
+    g.def("specific_heat_ratio", &ThermoInterface<double>::gamma, "Specific heat ratio", "temperature"_a);
+    g.def("specific_heat_ratio", &ThermoInterface<array_t>::gamma, "Specific heat ratio", "temperature"_a);
+    g.def("gamma", &ThermoInterface<double>::gamma, "Specific heat ratio", "temperature"_a);
+    g.def("gamma", &ThermoInterface<array_t>::gamma, "Specific heat ratio", "temperature"_a);
 
-    g.def("specific_heat_pressure",
-          py::overload_cast<double>(&ThermoInterface<array_t>::cp, py::const_),
-          "Specific heat pressure",
-          py::arg("temperature"));
-    g.def("cp",
-          py::overload_cast<double>(&ThermoInterface<array_t>::cp, py::const_),
-          "Specific heat pressure",
-          py::arg("temperature"));
+    g.def("specific_heat_pressure", &ThermoInterface<double>::cp, "Specific heat pressure", "temperature"_a);
+    g.def("specific_heat_pressure", &ThermoInterface<array_t>::cp, "Specific heat pressure", "temperature"_a);
+    g.def("cp", &ThermoInterface<double>::cp, "Specific heat pressure", "temperature"_a);
+    g.def("cp", &ThermoInterface<array_t>::cp, "Specific heat pressure", "temperature"_a);
 
-    g.def("pressure_ratio",
-          py::overload_cast<double, double, double>(&ThermoInterface<array_t>::pr, py::const_),
-          "Pressure Ratio",
-          py::arg("initiale temperature"),
-          py::arg("finale temperature"),
-          py::arg("polytropic efficiency"));
-    g.def("pr",
-          py::overload_cast<double, double, double>(&ThermoInterface<array_t>::pr, py::const_),
-          "Pressure Ratio",
-          py::arg("initiale temperature"),
-          py::arg("finale temperature"),
-          py::arg("polytropic efficiency"));
+    g.def("pressure_ratio", &ThermoInterface<double>::pr, "Pressure Ratio", "t1"_a, "t2"_a, "eff_poly"_a);
+    g.def("pressure_ratio", &ThermoInterface<array_t>::pr, "Pressure Ratio", "t1"_a, "t2"_a, "eff_poly"_a);
+    g.def("pr", &ThermoInterface<double>::pr, "Pressure Ratio", "t1"_a, "t2"_a, "eff_poly"_a);
+    g.def("pr", &ThermoInterface<array_t>::pr, "Pressure Ratio", "t1"_a, "t2"_a, "eff_poly"_a);
 
-    g.def("eff_poly",
-          py::overload_cast<double, double, double, double>(&ThermoInterface<array_t>::eff_poly,
-                                                            py::const_),
-          "Polytropic efficiency",
-          py::arg("initial pressure"),
-          py::arg("initial temperature"),
-          py::arg("final pressure"),
-          py::arg("final temperature"));
     g.def("polytropic_efficiency",
-          py::overload_cast<double, double, double, double>(&ThermoInterface<array_t>::eff_poly,
-                                                            py::const_),
+          &ThermoInterface<double>::eff_poly,
           "Polytropic efficiency",
-          py::arg("initial pressure"),
-          py::arg("initial temperature"),
-          py::arg("final pressure"),
-          py::arg("final temperature"));
+          "p1"_a,
+          "t1"_a,
+          "p2"_a,
+          "t2"_a);
+    g.def("polytropic_efficiency",
+          &ThermoInterface<array_t>::eff_poly,
+          "Polytropic efficiency",
+          "p1"_a,
+          "t1"_a,
+          "p2"_a,
+          "t2"_a);
+    g.def("eff_poly", &ThermoInterface<double>::eff_poly, "Polytropic efficiency", "p1"_a, "t1"_a, "p2"_a, "t2"_a);
+    g.def("eff_poly", &ThermoInterface<array_t>::eff_poly, "Polytropic efficiency", "p1"_a, "t1"_a, "p2"_a, "t2"_a);
+
+    g.def("static_t",
+          &ThermoExtendedInterface<double>::static_t,
+          "Static temperature",
+          "tt"_a,
+          "mach"_a,
+          "tol"_a,
+          "max_iter"_a = 30);
 
     py::register_exception<convergence_error>(m, "ConvergenceError", PyExc_RuntimeError);
     py::register_exception<domain_error>(m, "DomainError", PyExc_RuntimeError);

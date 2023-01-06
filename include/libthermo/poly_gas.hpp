@@ -141,11 +141,7 @@ namespace thermo
         auto static_t(const T& tt, const T& mach, double tol, std::size_t max_iter = 30) const;
 
         template <class T>
-        auto t_f_pr(const T& pr,
-                    const T& t1,
-                    const T& eff_poly,
-                    double tol,
-                    std::size_t max_iter = 30) const;
+        auto t_f_pr(const T& pr, const T& t1, const T& eff_poly, double tol, std::size_t max_iter = 30) const;
 
         template <class T>
         auto t_f_h(const T& h, double tol, std::size_t max_iter = 30) const;
@@ -154,8 +150,12 @@ namespace thermo
         auto t_f_phi(const T& h, double tol, std::size_t max_iter = 30) const;
 
         template <class T>
-        auto mach_f_wqa(
-            const T& pt, const T& tt, const T& wqa, double tol, std::size_t max_iter = 30) const;
+        auto mach_f_wqa(const T& pt, const T& tt, const T& wqa, double tol, std::size_t max_iter = 30) const;
+
+        const D& properties() const
+        {
+            return gas;
+        }
 
     protected:
         D gas;
@@ -202,8 +202,7 @@ namespace thermo
     {
         using namespace detail;
 
-        return (polyval(t2, gas.phi_coeffs) - polyval(t1, gas.phi_coeffs))
-               + gas.phi_log * std::log(t2 / t1);
+        return (polyval(t2, gas.phi_coeffs) - polyval(t1, gas.phi_coeffs)) + gas.phi_log * std::log(t2 / t1);
     }
 
     template <class D>
@@ -228,10 +227,7 @@ namespace thermo
 
     template <class D>
     template <class T>
-    inline auto PolyGas<D>::static_t(const T& tt,
-                                     const T& mach,
-                                     double tol,
-                                     std::size_t max_iter) const
+    inline auto PolyGas<D>::static_t(const T& tt, const T& mach, double tol, std::size_t max_iter) const
     {
         using namespace math;
 
@@ -272,8 +268,7 @@ namespace thermo
 
     template <class D>
     template <class T>
-    auto PolyGas<D>::t_f_pr(
-        const T& pr, const T& t1, const T& eff_poly, double tol, std::size_t max_iter) const
+    auto PolyGas<D>::t_f_pr(const T& pr, const T& t1, const T& eff_poly, double tol, std::size_t max_iter) const
     {
         return t_f_phi(std::log(pr) * gas.r / eff_poly + phi(t1), tol, max_iter);
     }
@@ -344,8 +339,7 @@ namespace thermo
 
     template <class D>
     template <class T>
-    auto PolyGas<D>::mach_f_wqa(
-        const T& pt, const T& tt, const T& wqa, double tol, std::size_t max_iter) const
+    auto PolyGas<D>::mach_f_wqa(const T& pt, const T& tt, const T& wqa, double tol, std::size_t max_iter) const
     {
         using namespace detail;
         using namespace math;
