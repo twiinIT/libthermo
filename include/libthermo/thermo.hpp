@@ -93,48 +93,32 @@ namespace thermo
         return *static_cast<derived_type*>(this);
     }
 
-
-    template <class Vec>
-    class ThermoInterface : public Thermo<ThermoInterface<Vec>>
+    template <class T>
+    class ThermoInterface : public Thermo<ThermoInterface<T>>
     {
     public:
         ThermoInterface() = default;
 
-        virtual double gamma(double t) const = 0;
-        virtual Vec gamma(const Vec& t) const = 0;
-
-        virtual double cp(double t) const = 0;
-        virtual Vec cp(const Vec& t) const = 0;
-
-        virtual double phi(double t) const = 0;
-        virtual Vec phi(const Vec& t) const = 0;
-
-        virtual double pr(double t1, double t2, double eff_poly) const = 0;
-        virtual Vec pr(const Vec& t1, const Vec& t2, const Vec& eff_poly) const = 0;
-
-        virtual double eff_poly(double p1, double t1, double p2, double t2) const = 0;
-        virtual Vec eff_poly(const Vec& p1, const Vec& t1, const Vec& p2, const Vec& t2) const = 0;
-
-        virtual double h(double t) const = 0;
-        virtual Vec h(const Vec& t) const = 0;
-
-        virtual double static_t(double tt, double mach, double tol, std::size_t max_iter) const = 0;
-        // virtual Vec static_t(const Vec& tt, const Vec& mach) const = 0;
-
-        virtual double t_f_h(double h, double tol, std::size_t max_iter) const = 0;
-        // virtual Vec t_f_h(const Vec& h) const = 0;
-
-        virtual double t_f_phi(double phi, double tol, std::size_t max_iter) const = 0;
-        //  virtual Vec t_f_phi(const Vec& phi) const = 0;
-
-        virtual double t_f_pr(
-            double pr, double t1, double eff_poly, double tol, std::size_t max_iter) const = 0;
-        // virtual Vec t_f_pr(const Vec& pr, const Vec& t1, const Vec& eff_poly) const = 0;
-
-        virtual double mach_f_wqa(
-            double pt, double tt, double wqa, double tol, std::size_t max_iter) const = 0;
-
         virtual double r() const = 0;
+        virtual T gamma(const T& t) const = 0;
+        virtual T cp(const T& t) const = 0;
+        virtual T phi(const T& t) const = 0;
+        virtual T pr(const T& t1, const T& t2, const T& eff_poly) const = 0;
+        virtual T eff_poly(const T& p1, const T& t1, const T& p2, const T& t2) const = 0;
+        virtual T h(const T& t) const = 0;
+    };
+
+    template <class T>
+    class ThermoExtendedInterface : public ThermoInterface<T>
+    {
+    public:
+        ThermoExtendedInterface() = default;
+
+        virtual T static_t(const T& tt, const T& mach, double tol, std::size_t max_iter = 30) const = 0;
+        virtual T t_f_h(const T& h, double tol, std::size_t max_iter = 30) const = 0;
+        virtual T t_f_phi(const T& phi, double tol, std::size_t max_iter = 30) const = 0;
+        virtual T t_f_pr(const T& pr, const T& t1, const T& eff_poly, double tol, std::size_t max_iter = 30) const = 0;
+        virtual T mach_f_wqa(const T& pt, const T& tt, const T& wqa, double tol, std::size_t max_iter = 30) const = 0;
     };
 }
 
