@@ -28,14 +28,23 @@
 #else
     #include <type_traits>
 
-    #define IS_NOT_XTENSOR std::enable_if_t<std::true_type(), int> = 0
-    #define IS_NOT_XTENSOR_ std::enable_if_t<std::true_type(), int>
+    namespace{
+        template<class T>
+        class disabled: public std::false_type
+        {};
+        template<class T>
+        class enabled: public std::true_type
+        {};
+    }
+    #define IS_NOT_XEXPRESSION std::enable_if_t<enabled<E>::value, int> = 0
+    #define IS_XEXPRESSION std::enable_if_t<disabled<E>::value, int> = 0
 
-    #define IS_XTENSOR std::enable_if_t<std::false_type(), int> = 0
-    #define IS_XTENSOR_ std::enable_if_t<std::false_type(), int>
+    #define IS_NOT_XTENSOR std::enable_if_t<enabled<T>::value, int> = 0
+    #define IS_XTENSOR std::enable_if_t<disabled<T>::value, int> = 0
 
-    #define IS_NOT_XEXPRESSION std::enable_if_t<std::true_type(), int> = 0
-    #define IS_XEXPRESSION std::enable_if_t<std::false_type(), int> = 0
+    #define IS_NOT_XTENSOR_ std::enable_if_t<enabled<T>::value, int>
+    #define IS_XTENSOR_ std::enable_if_t<disabled<T>::value, int>
+
 #endif
 // clang-format on
 
@@ -62,8 +71,7 @@ namespace thermo
     template <typename T>
     struct is_iterator<
         T,
-        typename std::enable_if<
-            !std::is_same<typename std::iterator_traits<T>::value_type, void>::value>::type>
+        typename std::enable_if<!std::is_same<typename std::iterator_traits<T>::value_type, void>::value>::type>
     {
         static constexpr bool value = true;
     };
