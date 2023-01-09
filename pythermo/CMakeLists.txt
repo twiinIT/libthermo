@@ -34,11 +34,6 @@ target_link_libraries(pythermo_core
 )
 target_include_directories(pythermo_core PUBLIC ${NUMPY_INCLUDE_DIRS})
 
-install(
-    FILES ${PYTHERMO_SRCS_DIR}/thermo.hpp
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/pythermo
-)
-
 if (WIN32)
     target_compile_definitions(pythermo_core PUBLIC NOMINMAX)
 endif ()

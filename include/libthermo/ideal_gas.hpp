@@ -10,6 +10,8 @@
 #include "libthermo/thermo.hpp"
 #include "libthermo/math_utils.hpp"
 
+#include <boost/math/tools/roots.hpp>
+
 #include <cmath>
 
 
@@ -18,10 +20,10 @@ namespace thermo
     class IdealGas : public Thermo<IdealGas>
     {
     public:
-        IdealGas(double r_, double cp_)
-            : m_r(r_)
-            , m_cp(cp_)
-            , m_gamma(cp_ / (cp_ - r_)){};
+        IdealGas(double r, double cp)
+            : m_r(r)
+            , m_cp(cp)
+            , m_gamma(cp / (cp - r)){};
 
         template <class P>
         IdealGas(const P& props)
@@ -192,15 +194,27 @@ namespace thermo
     }
 
     template <class T>
-    auto IdealGas::mach_f_wqa(const T& pt, const T& tt, const T& wqa) const
+    auto IdealGas::mach_f_wqa(const T& pt, const T& tt, const T& wqa, double tol, std::size_t max_iter) const
     {
-        return 1.;
-    }
+        double a = wqa * sqrt(tt) / pt * sqrt(m_r / m_gamma);
+        double coeff = 0.5 * (m_gamma + 1.) / (1. - m_gamma);
+        double b = (m_gamma - 1.) / 2.;
 
-    template <class T>
-    auto IdealGas::mach_f_wqa(const T& pt, const T& tt, const T& wqa, double, std::size_t) const
-    {
-        return 1.;
+        auto err_a = [&](double mach) -> double { return mach * pow(1. + b * mach * mach, coeff) - a; };
+
+        boost::uintmax_t niter = max_iter;
+        auto res = boost::math::tools::bracket_and_solve_root(
+            err_a,
+            0.5,
+            1.2,
+            true,
+            [&tol](const auto& a, const auto& b) -> bool
+            {
+                using std::fabs;
+                return fabs(a - b) / (std::min)(fabs(a), fabs(b)) <= tol;
+            },
+            niter);
+        return res.first;
     }
 }
 

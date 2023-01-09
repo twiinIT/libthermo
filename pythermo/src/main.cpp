@@ -14,10 +14,10 @@
 #include "xtensor-python/pytensor.hpp"
 #include "xtensor-python/pyarray.hpp"
 
+
 namespace py = pybind11;
 using namespace thermo;
-using array_type = xt::pyarray<double, xt::layout_type::row_major>;
-
+using namespace pythermo;
 
 PYBIND11_MODULE(pythermo_core, m)
 {

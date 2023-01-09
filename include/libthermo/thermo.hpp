@@ -97,6 +97,7 @@ namespace thermo
     class ThermoInterface : public Thermo<ThermoInterface<T>>
     {
     public:
+        using base_type = T;
         ThermoInterface() = default;
 
         virtual double r() const = 0;
@@ -112,6 +113,7 @@ namespace thermo
     class ThermoExtendedInterface : public ThermoInterface<T>
     {
     public:
+        using base_type = T;
         ThermoExtendedInterface() = default;
 
         virtual T static_t(const T& tt, const T& mach, double tol, std::size_t max_iter = 30) const = 0;

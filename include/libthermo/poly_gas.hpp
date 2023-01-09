@@ -27,7 +27,7 @@ namespace thermo
     {
         using arr_t = std::array<double, D>;
 
-        PolyGasProps(const arr_t& cp_coeffs_, double h0_, double r_);
+        PolyGasProps(const arr_t& cp, double h0, double rs);
 
         std::array<double, D> cp_coeffs;
         std::array<double, D + 1> h_coeffs;
@@ -36,9 +36,9 @@ namespace thermo
     };
 
     template <int D>
-    PolyGasProps<D>::PolyGasProps(const arr_t& cp_coeffs_, double h0_, double r_)
-        : cp_coeffs(cp_coeffs_)
-        , r(r_)
+    PolyGasProps<D>::PolyGasProps(const arr_t& cp, double h0, double rs)
+        : cp_coeffs(cp)
+        , r(rs)
     {
         for (auto i = 0; i < D - 1; ++i)
         {
@@ -46,44 +46,44 @@ namespace thermo
             phi_coeffs[i] = cp_coeffs[i] / (D - i - 1);
         }
         h_coeffs[D - 1] = cp_coeffs[D - 1];
-        h_coeffs[D] = h0_;
+        h_coeffs[D] = h0;
 
         phi_coeffs[D - 1] = 0.;
         phi_log = cp_coeffs[D - 1];
     }
 
     template <int D>
-    PolyGasProps<D> mix(const std::vector<typename PolyGasProps<D>::arr_t>& cps_,
-                        const std::vector<double>& h0s_,
-                        const std::vector<double>& rs_,
-                        const std::vector<double>& weights_)
+    PolyGasProps<D> mix(const std::vector<typename PolyGasProps<D>::arr_t>& cps,
+                        const std::vector<double>& h0s,
+                        const std::vector<double>& rs,
+                        const std::vector<double>& weights)
     {
         typename PolyGasProps<D>::arr_t mix_cp;
         double mix_h0 = 0., mix_r = 0.;
         mix_cp.fill(0.);
 
-        auto s = weights_.size();
+        auto s = weights.size();
         if (s)
         {
-            if (cps_.size() != s || h0s_.size() != s || rs_.size() != s)
+            if (cps.size() != s || h0s.size() != s || rs.size() != s)
                 throw std::runtime_error("Incorrect size");
 
             double total_weight = 0.;
-            for (auto w : weights_)
+            for (auto w : weights)
                 total_weight += w;
 
             for (auto d = 0; d < D; ++d)
             {
                 for (auto i = 0; i < s; ++i)
-                    mix_cp[d] += cps_[i][d] * weights_[i];
+                    mix_cp[d] += cps[i][d] * weights[i];
 
                 mix_cp[d] /= total_weight;
             }
 
             for (auto i = 0; i < s; ++i)
             {
-                mix_h0 += h0s_[i] * weights_[i];
-                mix_r += rs_[i] * weights_[i];
+                mix_h0 += h0s[i] * weights[i];
+                mix_r += rs[i] * weights[i];
             }
             mix_h0 /= total_weight;
             mix_r /= total_weight;
@@ -92,12 +92,12 @@ namespace thermo
         return PolyGasProps<D>(mix_cp, mix_h0, mix_r);
     }
 
-    template <class D>
-    class PolyGas : public Thermo<PolyGas<D>>
+    template <class P>
+    class PolyGas : public Thermo<PolyGas<P>>
     {
     public:
-        PolyGas(const D& gas_)
-            : gas(gas_){};
+        PolyGas(const P& properties)
+            : m_props(properties){};
 
         template <class T, IS_NOT_XTENSOR>
         auto gamma(const T& t) const;
@@ -152,82 +152,83 @@ namespace thermo
         template <class T>
         auto mach_f_wqa(const T& pt, const T& tt, const T& wqa, double tol, std::size_t max_iter = 30) const;
 
-        const D& properties() const
+        const P& properties() const
         {
-            return gas;
+            return m_props;
         }
 
     protected:
-        D gas;
+        P m_props;
     };
 
-    template <class D>
+    template <class P>
     template <class T, IS_NOT_XTENSOR_>
-    auto PolyGas<D>::gamma(const T& t) const
+    auto PolyGas<P>::gamma(const T& t) const
     {
         T tmp_cp = cp(t);
-        return tmp_cp / (tmp_cp - gas.r);
+        return tmp_cp / (tmp_cp - m_props.r);
     }
 
-    template <class D>
+    template <class P>
     template <class T>
-    auto PolyGas<D>::cp(const T& t) const
+    auto PolyGas<P>::cp(const T& t) const
     {
         using namespace detail;
 
-        return polyval(t, gas.cp_coeffs);
+        return polyval(t, m_props.cp_coeffs);
     }
 
-    template <class D>
+    template <class P>
     template <class T>
-    auto PolyGas<D>::h(const T& t) const
+    auto PolyGas<P>::h(const T& t) const
     {
         using namespace detail;
 
-        return polyval(t, gas.h_coeffs);
+        return polyval(t, m_props.h_coeffs);
     }
 
-    template <class D>
+    template <class P>
     template <class T, IS_NOT_XTENSOR_>
-    auto PolyGas<D>::phi(const T& t) const
+    auto PolyGas<P>::phi(const T& t) const
     {
         using namespace detail;
 
-        return polyval(t, gas.phi_coeffs) + gas.phi_log * std::log(t);
+        return polyval(t, m_props.phi_coeffs) + m_props.phi_log * std::log(t);
     }
 
-    template <class D>
+    template <class P>
     template <class T, IS_NOT_XTENSOR_>
-    auto PolyGas<D>::dphi(const T& t1, const T& t2) const
+    auto PolyGas<P>::dphi(const T& t1, const T& t2) const
     {
         using namespace detail;
 
-        return (polyval(t2, gas.phi_coeffs) - polyval(t1, gas.phi_coeffs)) + gas.phi_log * std::log(t2 / t1);
+        return (polyval(t2, m_props.phi_coeffs) - polyval(t1, m_props.phi_coeffs))
+               + m_props.phi_log * std::log(t2 / t1);
     }
 
-    template <class D>
-    inline double PolyGas<D>::r() const
+    template <class P>
+    inline double PolyGas<P>::r() const
     {
-        return gas.r;
+        return m_props.r;
     }
 
-    template <class D>
+    template <class P>
     template <class T, IS_NOT_XTENSOR_>
-    auto PolyGas<D>::pr(const T& t1, const T& t2, const T& eff_poly) const
+    auto PolyGas<P>::pr(const T& t1, const T& t2, const T& eff_poly) const
     {
-        return std::exp(dphi(t1, t2) * eff_poly / gas.r);
+        return std::exp(dphi(t1, t2) * eff_poly / m_props.r);
     }
 
-    template <class D>
+    template <class P>
     template <class T, IS_NOT_XTENSOR_>
-    auto PolyGas<D>::eff_poly(const T& p1, const T& t1, const T& p2, const T& t2) const
+    auto PolyGas<P>::eff_poly(const T& p1, const T& t1, const T& p2, const T& t2) const
     {
         return r() * log(p2 / p1) / dphi(t1, t2);
     }
 
-    template <class D>
+    template <class P>
     template <class T>
-    inline auto PolyGas<D>::static_t(const T& tt, const T& mach, double tol, std::size_t max_iter) const
+    inline auto PolyGas<P>::static_t(const T& tt, const T& mach, double tol, std::size_t max_iter) const
     {
         using namespace math;
 
@@ -266,16 +267,16 @@ namespace thermo
         return ts;
     }
 
-    template <class D>
+    template <class P>
     template <class T>
-    auto PolyGas<D>::t_f_pr(const T& pr, const T& t1, const T& eff_poly, double tol, std::size_t max_iter) const
+    auto PolyGas<P>::t_f_pr(const T& pr, const T& t1, const T& eff_poly, double tol, std::size_t max_iter) const
     {
-        return t_f_phi(std::log(pr) * gas.r / eff_poly + phi(t1), tol, max_iter);
+        return t_f_phi(std::log(pr) * m_props.r / eff_poly + phi(t1), tol, max_iter);
     }
 
-    template <class D>
+    template <class P>
     template <class T>
-    auto PolyGas<D>::t_f_h(const T& h_in, double tol, std::size_t max_iter) const
+    auto PolyGas<P>::t_f_h(const T& h_in, double tol, std::size_t max_iter) const
     {
         using namespace detail;
 
@@ -307,9 +308,9 @@ namespace thermo
         return t;
     }
 
-    template <class D>
+    template <class P>
     template <class T>
-    auto PolyGas<D>::t_f_phi(const T& phi_in, double tol, std::size_t max_iter) const
+    auto PolyGas<P>::t_f_phi(const T& phi_in, double tol, std::size_t max_iter) const
     {
         using namespace detail;
 
@@ -337,9 +338,9 @@ namespace thermo
         return t;
     }
 
-    template <class D>
+    template <class P>
     template <class T>
-    auto PolyGas<D>::mach_f_wqa(const T& pt, const T& tt, const T& wqa, double tol, std::size_t max_iter) const
+    auto PolyGas<P>::mach_f_wqa(const T& pt, const T& tt, const T& wqa, double tol, std::size_t max_iter) const
     {
         using namespace detail;
         using namespace math;
