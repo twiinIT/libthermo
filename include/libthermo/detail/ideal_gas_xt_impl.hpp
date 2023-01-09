@@ -16,8 +16,6 @@ namespace thermo
     template <class T, IS_XTENSOR_>
     auto IdealGas::gamma(const T& t) const
     {
-        // return xt::full_like(t, m_gamma);
-        // return xt::ones<double>(t.shape()) * m_gamma;
         return xt::broadcast(m_gamma, t.shape());
     }
 
@@ -25,7 +23,6 @@ namespace thermo
     auto IdealGas::cp(const T& t) const
     {
         return xt::broadcast(m_cp, t.shape());
-        // return xt::full_like(t, m_cp);
     }
 
     template <class T, IS_XTENSOR_>

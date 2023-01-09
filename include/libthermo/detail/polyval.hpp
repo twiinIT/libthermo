@@ -55,20 +55,17 @@ namespace
             return poly_eval<D - 1>::eval(x, coeffs.rbegin());
         }
 
-        template <
-            class E,
-            class C,
-            int D = thermo::static_size<C>(),
-            std::enable_if_t<!std::is_same_v<std::decay_t<C>, std::array<double, D>>, int> = 0>
+        template <class E,
+                  class C,
+                  int D = thermo::static_size<C>(),
+                  std::enable_if_t<!std::is_same_v<std::decay_t<C>, std::array<double, D>>, int> = 0>
         static inline auto eval(E&& x, C&& coeffs)
         {
             return poly_eval<D - 1>::eval(x, coeffs);
         }
 
         template <class E, class C>
-        static inline double eval(E&& x,
-                                  C&& coeffs,
-                                  std::enable_if_t<std::is_same_v<C, std::vector<double>>, int> = 0)
+        static inline double eval(E&& x, C&& coeffs, std::enable_if_t<std::is_same_v<C, std::vector<double>>, int> = 0)
         {
             std::remove_const_t<std::remove_reference_t<E>> acc = 0;
             for (auto it = coeffs.rbegin(); it < coeffs.rend(); ++it)
@@ -77,7 +74,6 @@ namespace
             return acc;
         }
     };
-
 }
 
 namespace thermo::detail

@@ -10,6 +10,8 @@
 #include "libthermo/thermo.hpp"
 #include "libthermo/math_utils.hpp"
 
+#include <boost/math/tools/roots.hpp>
+
 #include <cmath>
 
 
@@ -18,10 +20,10 @@ namespace thermo
     class IdealGas : public Thermo<IdealGas>
     {
     public:
-        IdealGas(double r_, double cp_)
-            : m_r(r_)
-            , m_cp(cp_)
-            , m_gamma(cp_ / (cp_ - r_)){};
+        IdealGas(double r, double cp)
+            : m_r(r)
+            , m_cp(cp)
+            , m_gamma(cp / (cp - r)){};
 
         template <class P>
         IdealGas(const P& props)
@@ -70,21 +72,28 @@ namespace thermo
 
         double r() const;
 
-        double static_t(const double tt, const double mach, double = 1e-8, std::size_t = 1) const;
+        double static_t(const double tt, const double mach) const;
+        double static_t(const double tt, const double mach, double, std::size_t = 1) const;
 
         template <class T>
-        auto t_f_pr(
-            const T& pr, const T& t1, const T& eff_poly, double = 1e-8, std::size_t = 1) const;
+        auto t_f_pr(const T& pr, const T& t1, const T& eff_poly) const;
+        template <class T>
+        auto t_f_pr(const T& pr, const T& t1, const T& eff_poly, double, std::size_t = 1) const;
 
         template <class T>
-        auto t_f_h(const T& h, double = 1e-8, std::size_t = 1) const;
+        auto t_f_h(const T& h) const;
+        template <class T>
+        auto t_f_h(const T& h, double, std::size_t = 1) const;
 
         template <class T>
-        auto t_f_phi(const T& h, double = 1e-8, std::size_t = 1) const;
+        auto t_f_phi(const T& h) const;
+        template <class T>
+        auto t_f_phi(const T& h, double, std::size_t = 1) const;
 
         template <class T>
-        auto mach_f_wqa(
-            const T& pt, const T& tt, const T& wqa, double = 1e-8, std::size_t = 1) const;
+        auto mach_f_wqa(const T& pt, const T& tt, const T& wqa) const;
+        template <class T>
+        auto mach_f_wqa(const T& pt, const T& tt, const T& wqa, double, std::size_t = 1) const;
 
     protected:
         double m_r, m_cp, m_gamma;
@@ -138,33 +147,74 @@ namespace thermo
         return m_r;
     }
 
-    inline double IdealGas::static_t(const double tt, const double mach, double, std::size_t) const
+    inline double IdealGas::static_t(const double tt, const double mach) const
     {
         return tt / (1 + 0.5 * (m_cp / (m_cp - m_r) - 1.) * std::pow(mach, 2.));
     }
 
+    inline double IdealGas::static_t(const double tt, const double mach, double, std::size_t) const
+    {
+        return static_t(tt, mach);
+    }
+
     template <class T>
-    auto IdealGas::t_f_pr(const T& pr, const T& t1, const T& eff_poly, double, std::size_t) const
+    auto IdealGas::t_f_pr(const T& pr, const T& t1, const T& eff_poly) const
     {
         return t1 * std::pow(pr, m_r / (m_cp * eff_poly));
     }
 
     template <class T>
-    auto IdealGas::t_f_h(const T& h, double, std::size_t) const
+    auto IdealGas::t_f_pr(const T& pr, const T& t1, const T& eff_poly, double, std::size_t) const
+    {
+        return t_f_pr(pr, t1, eff_poly);
+    }
+
+    template <class T>
+    auto IdealGas::t_f_h(const T& h) const
     {
         return h / m_cp;
     }
 
     template <class T>
-    auto IdealGas::t_f_phi(const T& phi, double, std::size_t) const
+    auto IdealGas::t_f_h(const T& h, double, std::size_t) const
+    {
+        return t_f_h(h);
+    }
+
+    template <class T>
+    auto IdealGas::t_f_phi(const T& phi) const
     {
         return std::exp(phi / m_cp);
     }
 
     template <class T>
-    auto IdealGas::mach_f_wqa(const T& pt, const T& tt, const T& wqa, double, std::size_t) const
+    auto IdealGas::t_f_phi(const T& phi, double, std::size_t) const
     {
-        return 1.;
+        return t_f_phi(phi);
+    }
+
+    template <class T>
+    auto IdealGas::mach_f_wqa(const T& pt, const T& tt, const T& wqa, double tol, std::size_t max_iter) const
+    {
+        double a = wqa * sqrt(tt) / pt * sqrt(m_r / m_gamma);
+        double coeff = 0.5 * (m_gamma + 1.) / (1. - m_gamma);
+        double b = (m_gamma - 1.) / 2.;
+
+        auto err_a = [&](double mach) -> double { return mach * pow(1. + b * mach * mach, coeff) - a; };
+
+        boost::uintmax_t niter = max_iter;
+        auto res = boost::math::tools::bracket_and_solve_root(
+            err_a,
+            0.5,
+            1.2,
+            true,
+            [&tol](const auto& a, const auto& b) -> bool
+            {
+                using std::fabs;
+                return fabs(a - b) / (std::min)(fabs(a), fabs(b)) <= tol;
+            },
+            niter);
+        return res.first;
     }
 }
 

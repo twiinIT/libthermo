@@ -32,14 +32,17 @@ message("  -> cmake config: " ${CMAKECONFIG_INSTALL_DIR})
 include(CMakePackageConfigHelpers)
 
 set(LIBTHERMO_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
-
-set(libthermo_headers
-    ${LIBTHERMO_INCLUDE_DIR}/libthermo/thermo.hpp
-    ${LIBTHERMO_INCLUDE_DIR}/libthermo/exceptions.hpp
-    ${LIBTHERMO_INCLUDE_DIR}/libthermo/ideal_gas.hpp
-    ${LIBTHERMO_INCLUDE_DIR}/libthermo/poly_gas.hpp
-    ${LIBTHERMO_INCLUDE_DIR}/libthermo/math_utils.hpp
-    ${LIBTHERMO_INCLUDE_DIR}/libthermo/version.hpp
+set(LIBTHERMO_HEADERS
+    exceptions.hpp
+    ideal_gas.hpp
+    math_utils.hpp
+    poly_gas.hpp
+    thermo.hpp
+    type_traits.hpp
+    version.hpp
+    detail/ideal_gas_xt_impl.hpp
+    detail/poly_gas_xt_impl.hpp
+    detail/polyval.hpp
 )
 
 add_library(libthermo INTERFACE)
@@ -64,14 +67,20 @@ if (LIBTHERMO_USE_XTENSOR)
 endif ()
 
 target_link_libraries(libthermo
-    PUBLIC           
+    INTERFACE           
         ${Boost_LIBRARIES}
 )
 
 install(TARGETS libthermo 
         EXPORT ${PROJECT_NAME}-targets)
 
-install(FILES ${libthermo_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libthermo)
+foreach (file ${LIBTHERMO_HEADERS})
+    get_filename_component(dir ${file} DIRECTORY)
+    install(
+        FILES ${LIBTHERMO_INCLUDE_DIR}/libthermo/${file}
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libthermo/${dir}
+    )
+endforeach()
 
 if(BUILD_TESTS)
     add_subdirectory(tests)

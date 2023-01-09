@@ -1,16 +1,18 @@
-name: libthermo-dev
+name: libthermo
 channels:
   - conda-forge
 dependencies:
   - cmake
   - make
-  - gxx_linux-64
+  - ninja
+  - cxx-compiler
   - gtest
   - xtensor
   - xsimd
   - tbb-devel
   - xtensor-python
   - pybind11
-  - python<=3.9
+  - python
   - numpy
   - nlohmann_json
+  - boost
