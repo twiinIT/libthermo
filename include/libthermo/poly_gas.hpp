@@ -262,7 +262,7 @@ namespace thermo
                 break;
             }
 
-            dcp = polyval(ts, gas.dcp_coeffs);
+            dcp = polyval(ts, m_props.dcp_coeffs);
             cp_ = cp(ts);
             dgam = -r_ * dcp / pow(cp_ - r_, 2.);
             ts -= x / (-cp_ - 0.5 * mach2 * r_ * (gam + ts * dgam));
