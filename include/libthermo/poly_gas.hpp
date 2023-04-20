@@ -22,22 +22,23 @@
 
 namespace thermo
 {
-    template <int D>
+    template <class T, int D>
     struct PolyGasProps
     {
-        using arr_t = std::array<double, D>;
+        using arr_t = std::array<T, D>;
+        using value_t = T;
 
-        PolyGasProps(const arr_t& cp, double h0, double rs);
+        PolyGasProps(const arr_t& cp, T h0, T rs);
 
-        std::array<double, D> cp_coeffs;
-        std::array<double, D - 1> dcp_coeffs;
-        std::array<double, D + 1> h_coeffs;
-        std::array<double, D> phi_coeffs;
-        double r, phi_log;
+        std::array<T, D> cp_coeffs;
+        std::array<T, D - 1> dcp_coeffs;
+        std::array<T, D + 1> h_coeffs;
+        std::array<T, D> phi_coeffs;
+        T r, phi_log;
     };
 
-    template <int D>
-    PolyGasProps<D>::PolyGasProps(const arr_t& cp, double h0, double rs)
+    template <class T, int D>
+    PolyGasProps<T, D>::PolyGasProps(const arr_t& cp, T h0, T rs)
         : cp_coeffs(cp)
         , r(rs)
     {
@@ -54,14 +55,14 @@ namespace thermo
         phi_log = cp_coeffs[D - 1];
     }
 
-    template <int D>
-    PolyGasProps<D> mix(const std::vector<typename PolyGasProps<D>::arr_t>& cps,
-                        const std::vector<double>& h0s,
-                        const std::vector<double>& rs,
-                        const std::vector<double>& weights)
+    template <class T, int D>
+    PolyGasProps<T, D> mix(const std::vector<typename PolyGasProps<T, D>::arr_t>& cps,
+                           const std::vector<T>& h0s,
+                           const std::vector<T>& rs,
+                           const std::vector<T>& weights)
     {
-        typename PolyGasProps<D>::arr_t mix_cp;
-        double mix_h0 = 0., mix_r = 0.;
+        typename PolyGasProps<T, D>::arr_t mix_cp;
+        T mix_h0 = 0., mix_r = 0.;
         mix_cp.fill(0.);
 
         auto s = weights.size();
@@ -70,7 +71,7 @@ namespace thermo
             if (cps.size() != s || h0s.size() != s || rs.size() != s)
                 throw std::runtime_error("Incorrect size");
 
-            double total_weight = 0.;
+            T total_weight = 0.;
             for (auto w : weights)
                 total_weight += w;
 
@@ -91,13 +92,15 @@ namespace thermo
             mix_r /= total_weight;
         }
 
-        return PolyGasProps<D>(mix_cp, mix_h0, mix_r);
+        return PolyGasProps<T, D>(mix_cp, mix_h0, mix_r);
     }
 
     template <class P>
     class PolyGas : public Thermo<PolyGas<P>>
     {
     public:
+        using value_t = typename P::value_t;
+
         PolyGas(const P& properties)
             : m_props(properties){};
 
@@ -125,7 +128,7 @@ namespace thermo
         template <class T, IS_XTENSOR>
         auto dphi(const T& t1, const T& t2) const;
 
-        double r() const;
+        value_t r() const;
 
         template <class T, IS_NOT_XTENSOR>
         auto pr(const T& t1, const T& t2, const T& eff_poly) const;
@@ -167,7 +170,7 @@ namespace thermo
     template <class T, IS_NOT_XTENSOR_>
     auto PolyGas<P>::gamma(const T& t) const
     {
-        T tmp_cp = cp(t);
+        auto tmp_cp = cp(t);
         return tmp_cp / (tmp_cp - m_props.r);
     }
 
@@ -209,7 +212,7 @@ namespace thermo
     }
 
     template <class P>
-    inline double PolyGas<P>::r() const
+    inline typename P::value_t PolyGas<P>::r() const
     {
         return m_props.r;
     }

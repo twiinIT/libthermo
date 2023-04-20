@@ -13,29 +13,29 @@ using namespace thermo;
 
 namespace pythermo
 {
-    class PyIdealGas : public PyThermoHelper<IdealGas, array_t>
+    class PyIdealGas : public PyThermoHelper<IdealGas<double>, array_t>
     {
     public:
         PyIdealGas(double r, double cp)
-            : PyThermoHelper<IdealGas, array_t>(r, cp)
+            : PyThermoHelper<IdealGas<double>, array_t>(r, cp)
         {
         }
 
         double static_t(const double& t, const double& mach) const
         {
-            return IdealGas::static_t(t, mach);
+            return IdealGas<double>::static_t(t, mach);
         }
         double t_f_h(const double& h) const
         {
-            return IdealGas::t_f_h(h);
+            return IdealGas<double>::t_f_h(h);
         }
         double t_f_phi(const double& phi) const
         {
-            return IdealGas::t_f_phi(phi);
+            return IdealGas<double>::t_f_phi(phi);
         }
         double t_f_pr(const double& pr, const double& t1, const double& eff_poly) const
         {
-            return IdealGas::t_f_pr(pr, t1, eff_poly);
+            return IdealGas<double>::t_f_pr(pr, t1, eff_poly);
         }
     };
 

@@ -22,10 +22,7 @@ namespace fs = std::filesystem;
 
 namespace thermo
 {
-    nlohmann::json timeit(std::function<void()> f,
-                          std::size_t size,
-                          unsigned long repeat,
-                          unsigned long number)
+    nlohmann::json timeit(std::function<void()> f, std::size_t size, unsigned long repeat, unsigned long number)
     {
         xt::xtensor<double, 1>::shape_type times_shape = { number };
         xt::xtensor<double, 1> times(times_shape, 1.);
@@ -35,8 +32,7 @@ namespace thermo
             auto t1 = std::chrono::high_resolution_clock::now();
             f();
             auto t2 = std::chrono::high_resolution_clock::now();
-            auto t = static_cast<double>(
-                         std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count())
+            auto t = static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count())
                      / static_cast<double>(repeat * size);
 
             times[i] = t;
@@ -222,8 +218,7 @@ namespace thermo
             auto t1 = std::chrono::high_resolution_clock::now();
             f(ntimes);
             auto t2 = std::chrono::high_resolution_clock::now();
-            return static_cast<double>(
-                       std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count())
+            return static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count())
                    / static_cast<double>(ntimes * size);
         };
 
@@ -237,7 +232,7 @@ namespace thermo
         std::cout << "t_f_phi -> " << timeit(bench_t_from_phi, ntimes) << " ns" << std::endl;
         std::cout << "t_f_pr -> " << timeit(bench_t_from_pr, ntimes) << " ns" << std::endl;
         std::cout << "eff_poly -> " << timeit(bench_eff_poly, ntimes) << " ns" << std::endl;
-        std::cout << "mach_f_wqa -> " << timeit(bench_mach_f_wqa, ntimes) << " ns" << std::endl;
+        std::cout << "mach_f_wqa -> " << timeit(bench_mach_f_wqa, ntimes / 2) << " ns" << std::endl;
         std::cout << "Pout -> " << timeit(bench_pout, ntimes) << " ns" << std::endl;
     }
 
@@ -345,8 +340,8 @@ namespace thermo
         nlohmann::json j;
         j["N"] = size;
 
-#define TIME_F(NAME)                                                                               \
-    j[#NAME] = timeit(bench_##NAME, size, repeat, number);                                         \
+#define TIME_F(NAME)                                                                                                   \
+    j[#NAME] = timeit(bench_##NAME, size, repeat, number);                                                             \
     std::cout << #NAME << " --> " << j[#NAME] << " ns";
 
 
@@ -360,19 +355,19 @@ namespace thermo
     }
 
 #ifdef LIBTHERMO_USE_XTENSOR
-    template <class G>
+    template <class G, class D = typename std::remove_reference_t<G>::value_t>
     void benchmark_vector(G&& gas, std::size_t size, unsigned long repeat, unsigned number)
     {
-        xt::xtensor<double, 1>::shape_type shape = { size };
-        xt::xtensor<double, 1> res(shape, 1.);
+        typename xt::xtensor<D, 1>::shape_type shape = { size };
+        xt::xtensor<D, 1> res(shape, 1.);
 
-        xt::xtensor<double, 1> t1(shape, 273.15);
-        xt::xtensor<double, 1> t2(shape, 350.);
+        xt::xtensor<D, 1> t1(shape, 273.15);
+        xt::xtensor<D, 1> t2(shape, 350.);
 
-        xt::xtensor<double, 1> p1(shape, 101325.);
-        xt::xtensor<double, 1> p2(shape, 500000.);
+        xt::xtensor<D, 1> p1(shape, 101325.);
+        xt::xtensor<D, 1> p2(shape, 500000.);
 
-        xt::xtensor<double, 1> eff(shape, 0.82);
+        xt::xtensor<D, 1> eff(shape, 0.82);
 
         auto bench_cp = [&]() -> void
         {
@@ -505,7 +500,7 @@ main()
     }
 
     {
-        PolyGas gas(PolyGasProps<8>({ 0., 0., 0., 0., 0., 0., 0., 1004.4 }, 0., 287.05287));
+        PolyGas gas(PolyGasProps<double, 8>({ 0., 0., 0., 0., 0., 0., 0., 1004.4 }, 0., 287.05287));
 
         std::cout << "\n"
                   << "Reference values" << std::endl;
@@ -516,8 +511,7 @@ main()
         std::cout << "pr -> " << gas.pr(Tref, 450., 0.82) << std::endl;
         std::cout << "t_f_h -> " << gas.t_f_h(gas.h(Tref), 1e-8) << std::endl;
         std::cout << "t_f_phi -> " << gas.t_f_phi(gas.phi(Tref), 1e-8) << std::endl;
-        std::cout << "t_f_pr -> " << gas.t_f_pr(gas.pr(Tref, 450., 0.82), Tref, 0.82, 1e-8)
-                  << std::endl;
+        std::cout << "t_f_pr -> " << gas.t_f_pr(gas.pr(Tref, 450., 0.82), Tref, 0.82, 1e-8) << std::endl;
 
         std::cout << "\nSingle value tests" << std::endl;
         benchmark_single_value(gas, 100000, 50);
@@ -528,7 +522,11 @@ main()
 
 #ifdef LIBTHERMO_USE_XTENSOR
         std::cout << "\nVector tests 1M" << std::endl;
-        benchmark_vector(gas, 1000000, 1000, 10);
+        benchmark_vector(gas, 1000000, 10, 10);
+
+        PolyGas gas_float(PolyGasProps<float, 8>({ 0., 0., 0., 0., 0., 0., 0., 1004.4 }, 0., 287.05287));
+        std::cout << "\nVector tests 1M float" << std::endl;
+        benchmark_vector(gas_float, 1000000, 10, 10);
 #endif
     }
     // std::cout << XSIMD_X86_INSTR_SET << std::endl;

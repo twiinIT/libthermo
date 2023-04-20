@@ -17,10 +17,11 @@
 
 namespace thermo
 {
-    class IdealGas : public Thermo<IdealGas>
+    template <class D>
+    class IdealGas : public Thermo<IdealGas<D>>
     {
     public:
-        IdealGas(double r, double cp)
+        IdealGas(const D& r, const D& cp)
             : m_r(r)
             , m_cp(cp)
             , m_gamma(cp / (cp - r)){};
@@ -96,105 +97,124 @@ namespace thermo
         auto mach_f_wqa(const T& pt, const T& tt, const T& wqa, double, std::size_t = 1) const;
 
     protected:
-        double m_r, m_cp, m_gamma;
+        D m_r, m_cp, m_gamma;
+
+        template <class S>
+        friend bool operator==(const IdealGas<S>& ref, const IdealGas<S>& other);
     };
 
+    template <class D>
     template <class T, IS_NOT_XTENSOR_>
-    auto IdealGas::gamma(const T&) const
+    auto IdealGas<D>::gamma(const T&) const
     {
         return m_gamma;
     }
 
+    template <class D>
     template <class T, IS_NOT_XTENSOR_>
-    auto IdealGas::cp(const T&) const
+    auto IdealGas<D>::cp(const T&) const
     {
         return m_cp;
     }
 
-
+    template <class D>
     template <class T, IS_NOT_XTENSOR_>
-    auto IdealGas::phi(const T& t) const
+    auto IdealGas<D>::phi(const T& t) const
     {
         return m_cp * std::log(t);
     }
 
+    template <class D>
     template <class T, IS_NOT_XTENSOR_>
-    auto IdealGas::pr(const T& t1, const T& t2, const T& eff_poly) const
+    auto IdealGas<D>::pr(const T& t1, const T& t2, const T& eff_poly) const
     {
         return std::exp(std::log(t2 / t1) * eff_poly * m_cp / m_r);
     }
 
+    template <class D>
     template <class T, IS_NOT_XTENSOR_>
-    auto IdealGas::Tau(const T& p1, const T& p2, const T& eff_poly) const
+    auto IdealGas<D>::Tau(const T& p1, const T& p2, const T& eff_poly) const
     {
         return std::exp(std::log(p2 / p1) * m_r / (eff_poly * m_cp));
     }
 
+    template <class D>
     template <class T, IS_NOT_XTENSOR_>
-    auto IdealGas::eff_poly(const T& p1, const T& t1, const T& p2, const T& t2) const
+    auto IdealGas<D>::eff_poly(const T& p1, const T& t1, const T& p2, const T& t2) const
     {
         return r() / m_cp * log(p2 / p1) / std::log(t2 / t1);
     }
 
+    template <class D>
     template <class T>
-    auto IdealGas::h(const T& t) const
+    auto IdealGas<D>::h(const T& t) const
     {
         return m_cp * t;
     }
 
-    inline double IdealGas::r() const
+    template <class D>
+    inline double IdealGas<D>::r() const
     {
         return m_r;
     }
 
-    inline double IdealGas::static_t(const double tt, const double mach) const
+    template <class D>
+    inline double IdealGas<D>::static_t(const double tt, const double mach) const
     {
         return tt / (1 + 0.5 * (m_cp / (m_cp - m_r) - 1.) * std::pow(mach, 2.));
     }
 
-    inline double IdealGas::static_t(const double tt, const double mach, double, std::size_t) const
+    template <class D>
+    inline double IdealGas<D>::static_t(const double tt, const double mach, double, std::size_t) const
     {
         return static_t(tt, mach);
     }
 
+    template <class D>
     template <class T>
-    auto IdealGas::t_f_pr(const T& pr, const T& t1, const T& eff_poly) const
+    auto IdealGas<D>::t_f_pr(const T& pr, const T& t1, const T& eff_poly) const
     {
         return t1 * std::pow(pr, m_r / (m_cp * eff_poly));
     }
 
+    template <class D>
     template <class T>
-    auto IdealGas::t_f_pr(const T& pr, const T& t1, const T& eff_poly, double, std::size_t) const
+    auto IdealGas<D>::t_f_pr(const T& pr, const T& t1, const T& eff_poly, double, std::size_t) const
     {
         return t_f_pr(pr, t1, eff_poly);
     }
 
+    template <class D>
     template <class T>
-    auto IdealGas::t_f_h(const T& h) const
+    auto IdealGas<D>::t_f_h(const T& h) const
     {
         return h / m_cp;
     }
 
+    template <class D>
     template <class T>
-    auto IdealGas::t_f_h(const T& h, double, std::size_t) const
+    auto IdealGas<D>::t_f_h(const T& h, double, std::size_t) const
     {
         return t_f_h(h);
     }
 
+    template <class D>
     template <class T>
-    auto IdealGas::t_f_phi(const T& phi) const
+    auto IdealGas<D>::t_f_phi(const T& phi) const
     {
         return std::exp(phi / m_cp);
     }
 
+    template <class D>
     template <class T>
-    auto IdealGas::t_f_phi(const T& phi, double, std::size_t) const
+    auto IdealGas<D>::t_f_phi(const T& phi, double, std::size_t) const
     {
         return t_f_phi(phi);
     }
 
+    template <class D>
     template <class T>
-    auto IdealGas::mach_f_wqa(const T& pt, const T& tt, const T& wqa, double tol, std::size_t max_iter) const
+    auto IdealGas<D>::mach_f_wqa(const T& pt, const T& tt, const T& wqa, double tol, std::size_t max_iter) const
     {
         double a = wqa * sqrt(tt) / pt * sqrt(m_r / m_gamma);
         double coeff = 0.5 * (m_gamma + 1.) / (1. - m_gamma);
@@ -215,6 +235,12 @@ namespace thermo
             },
             niter);
         return res.first;
+    }
+
+    template <class D>
+    inline bool operator==(const IdealGas<D>& ref, const IdealGas<D>& other)
+    {
+        return ref.m_cp == other.m_cp && ref.m_r == other.m_r;
     }
 }
 

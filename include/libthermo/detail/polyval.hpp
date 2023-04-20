@@ -10,18 +10,19 @@
 #include "libthermo/type_traits.hpp"
 
 #include <vector>
+#include <type_traits>
 
 
 namespace
 {
-    template <int D>
+    template <class T, int D>
     struct poly_eval
     {
         template <class E, class It, IS_NOT_XEXPRESSION>
         static inline auto eval(E&& x, It coeff)
         {
             auto c = coeff++;
-            return std::fma(x, poly_eval<D - 1>::eval(x, coeff), *c);
+            return std::fma(x, poly_eval<T, D - 1>::eval(x, coeff), *c);
         };
 
 #ifdef LIBTHERMO_USE_XTENSOR
@@ -29,19 +30,46 @@ namespace
         static inline auto eval(E&& x, It coeff)
         {
             auto c = coeff++;
-            return xt::fma(x, poly_eval<D - 1>::eval(x, coeff), *c);
+            return xt::fma(x, poly_eval<T, D - 1>::eval(x, coeff), *c);
         };
 #endif
     };
 
-    template <>
-    struct poly_eval<0>
+    template <class T>
+    struct poly_eval<T, 0>
     {
         template <class E, class It>
-        static inline double eval(E&&, It coeff)
+        static inline T eval(E&&, It coeff)
         {
             return *coeff;
         };
+    };
+
+    template <class T>
+    struct is_std_array : public std::false_type
+    {
+    };
+
+    template <class T, std::size_t D>
+    struct is_std_array<std::array<T, D>> : public std::true_type
+    {
+    };
+
+    template <class T>
+    struct coeffs_type
+    {
+    };
+
+    template <class T, std::size_t D>
+    struct coeffs_type<std::array<T, D>>
+    {
+        using type = T;
+    };
+
+    template <class T>
+    struct coeffs_type<std::vector<T>>
+    {
+        using type = T;
     };
 
     struct poly_impl
@@ -49,19 +77,19 @@ namespace
         template <class E,
                   class C,
                   int D = thermo::static_size<C>(),
-                  std::enable_if_t<std::is_same_v<std::decay_t<C>, std::array<double, D>>, int> = 0>
+                  std::enable_if_t<is_std_array<std::decay_t<C>>::value, int> = 0>
         static inline auto eval(E&& x, C&& coeffs)
         {
-            return poly_eval<D - 1>::eval(x, coeffs.rbegin());
+            return poly_eval<typename coeffs_type<std::decay_t<C>>::type, D - 1>::eval(x, coeffs.rbegin());
         }
 
         template <class E,
                   class C,
                   int D = thermo::static_size<C>(),
-                  std::enable_if_t<!std::is_same_v<std::decay_t<C>, std::array<double, D>>, int> = 0>
+                  std::enable_if_t<!is_std_array<std::decay_t<C>>::value, int> = 0>
         static inline auto eval(E&& x, C&& coeffs)
         {
-            return poly_eval<D - 1>::eval(x, coeffs);
+            return poly_eval<typename coeffs_type<std::decay_t<C>>::type, D - 1>::eval(x, coeffs);
         }
 
         template <class E, class C>
