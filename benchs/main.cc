@@ -27,7 +27,7 @@ namespace thermo
         xt::xtensor<double, 1>::shape_type times_shape = { number };
         xt::xtensor<double, 1> times(times_shape, 1.);
 
-        for (long i = 0; i < number; ++i)
+        for (std::size_t i = 0; i < number; ++i)
         {
             auto t1 = std::chrono::high_resolution_clock::now();
             f();
@@ -359,19 +359,19 @@ namespace thermo
     void benchmark_vector(G&& gas, std::size_t size, unsigned long repeat, unsigned number)
     {
         typename xt::xtensor<D, 1>::shape_type shape = { size };
-        xt::xtensor<D, 1> res(shape, 1.);
+        xt::xtensor<D, 1> res(shape, D(1.));
 
-        xt::xtensor<D, 1> t1(shape, 273.15);
-        xt::xtensor<D, 1> t2(shape, 350.);
+        xt::xtensor<D, 1> t1(shape, D(273.15));
+        xt::xtensor<D, 1> t2(shape, D(350.));
 
-        xt::xtensor<D, 1> p1(shape, 101325.);
-        xt::xtensor<D, 1> p2(shape, 500000.);
+        xt::xtensor<D, 1> p1(shape, D(101325.));
+        xt::xtensor<D, 1> p2(shape, D(500000.));
 
-        xt::xtensor<D, 1> eff(shape, 0.82);
+        xt::xtensor<D, 1> eff(shape, D(0.82));
 
         auto bench_cp = [&]() -> void
         {
-            for (long i = 0; i < repeat; i++)
+            for (std::size_t i = 0; i < repeat; i++)
             {
                 xt::noalias(res) = gas.cp(t1);
             };
@@ -379,7 +379,7 @@ namespace thermo
 
         auto bench_gamma = [&]() -> void
         {
-            for (long i = 0; i < repeat; i++)
+            for (std::size_t i = 0; i < repeat; i++)
             {
                 xt::noalias(res) = gas.gamma(t1);
             };
@@ -387,7 +387,7 @@ namespace thermo
 
         auto bench_h = [&]() -> void
         {
-            for (long i = 0; i < repeat; i++)
+            for (std::size_t i = 0; i < repeat; i++)
             {
                 xt::noalias(res) = gas.h(t1);
             };
@@ -395,7 +395,7 @@ namespace thermo
 
         auto bench_phi = [&]() -> void
         {
-            for (long i = 0; i < repeat; i++)
+            for (std::size_t i = 0; i < repeat; i++)
             {
                 xt::noalias(res) = gas.phi(t1);
             };
@@ -415,7 +415,7 @@ namespace thermo
         */
         auto bench_pr = [&]() -> void
         {
-            for (long i = 0; i < repeat; i++)
+            for (std::size_t i = 0; i < repeat; i++)
             {
                 xt::noalias(res) = gas.pr(t1, t2, eff);
             };
@@ -423,7 +423,7 @@ namespace thermo
 
         auto bench_eff_poly = [&]() -> void
         {
-            for (long i = 0; i < repeat; i++)
+            for (std::size_t i = 0; i < repeat; i++)
             {
                 xt::noalias(res) = gas.eff_poly(p1, t1, p2, t2);
             };
@@ -431,7 +431,7 @@ namespace thermo
 
         auto bench_pout = [&]() -> void
         {
-            for (long i = 0; i < repeat; i++)
+            for (std::size_t i = 0; i < repeat; i++)
             {
                 xt::noalias(res) = gas.pr(t1, t2, gas.eff_poly(p1, t1, p2, t2)) * p2;
             };
