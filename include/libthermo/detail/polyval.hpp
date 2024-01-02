@@ -22,7 +22,11 @@ namespace
         static inline auto eval(E&& x, It coeff)
         {
             auto c = coeff++;
+#ifdef LIBTHERMO_USE_FMA
             return std::fma(x, poly_eval<T, D - 1>::eval(x, coeff), *c);
+#else
+            x* poly_eval<T, D - 1>::eval(x, coeff) + *c;
+#endif
         };
 
 #ifdef LIBTHERMO_USE_XTENSOR
