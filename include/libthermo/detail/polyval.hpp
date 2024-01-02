@@ -25,7 +25,7 @@ namespace
 #ifdef LIBTHERMO_USE_FMA
             return std::fma(x, poly_eval<T, D - 1>::eval(x, coeff), *c);
 #else
-            x* poly_eval<T, D - 1>::eval(x, coeff) + *c;
+            return x * poly_eval<T, D - 1>::eval(x, coeff) + *c;
 #endif
         };
 
