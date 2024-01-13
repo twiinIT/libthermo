@@ -14,6 +14,7 @@ project (libthermo)
 option(BUILD_TESTS "Enable C++ tests for libthermo" OFF)
 option(BUILD_BENCHS "Enable C++ benchmarks for libthermo" OFF)
 option(BUILD_PY "Build Python bindings of libthermo" OFF)
+option(LIBTHERMO_USE_FMA "Use FMA instructions in libthermo" ON)
 option(LIBTHERMO_USE_XTENSOR "Enable C++ xtensor for libthermo" OFF)
 
 # Set installation directories (CMAKE_INSTALL_INCLUDEDIR, CMAKE_INSTALL_BINDIR, CMAKE_INSTALL_LIBDIR)
@@ -57,6 +58,19 @@ target_include_directories(
 
 find_package(Boost COMPONENTS math)
 
+if(WIN32 AND (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC"))
+    target_compile_options(libthermo INTERFACE /arch:AVX2)
+elseif(UNIX AND (CMAKE_CXX_COMPILER_ID STREQUAL "GNU"))
+    target_compile_options(libthermo INTERFACE -mfma)
+endif()
+
+if (LIBTHERMO_USE_FMA)
+    target_compile_definitions(libthermo
+        INTERFACE
+            LIBTHERMO_USE_FMA
+    )
+endif()
+
 if (LIBTHERMO_USE_XTENSOR)
     find_package(xtensor REQUIRED)
     target_compile_definitions(libthermo
@@ -64,7 +78,7 @@ if (LIBTHERMO_USE_XTENSOR)
             LIBTHERMO_USE_XTENSOR
     )
     target_link_libraries(libthermo INTERFACE xtensor)
-endif ()
+endif()
 
 target_link_libraries(libthermo
     INTERFACE           
