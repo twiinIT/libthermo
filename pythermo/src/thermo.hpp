@@ -11,109 +11,110 @@
 #include "libthermo/ideal_gas.hpp"
 #include "libthermo/poly_gas.hpp"
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
-#include "xtensor-python/pytensor.hpp"
-#include "xtensor-python/pyarray.hpp"
+#include <initializer_list>
 
-#include <pybind11/stl.h>
-#include <pybind11/stl_bind.h>
+// #include <nanobind/stl.h>
+// #include <nanobind/stl_bind.h>
 
 namespace pythermo
 {
-    using array_t = xt::pyarray<double, xt::layout_type::row_major>;
-
-    template <class A>
-    class PyThermo
-        : public thermo::ThermoExtendedInterface<double>
-        , public thermo::ThermoInterface<A>
+    template <typename Class, typename Func, typename... Extra>
+    NB_INLINE Class& multi_def(Class& class_, std::initializer_list<const char*> names, Func&& f, const Extra&... extra)
     {
-    };
-
-#define FORWARD_TO_BASE(tmpl, name, type, ...)                                                                         \
-    type name(const type& t) const override                                                                            \
-    {                                                                                                                  \
-        return tmpl::name(t);                                                                                          \
+        for (auto name : names)
+        {
+            class_.def(name, std::forward<Func>(f), extra...);
+        }
+        return class_;
     }
 
-    template <class G, class A>
-    class PyThermoHelper
-        : public PyThermo<A>
-        , protected G
+    template <typename Class, class ValueType>
+    void register_base_interface(Class& class_)
     {
-    public:
-        using G::G;
+        using G = typename Class::Type;
+        using namespace nanobind::literals;
 
-        FORWARD_TO_BASE(G, gamma, double);
-        FORWARD_TO_BASE(G, gamma, A);
+        multi_def(class_, { "constant", "r" }, &G::r, "Gas constant");
+        multi_def(class_, { "enthalpy", "h" }, &G::template h<const ValueType&>, "Enthalpy", "temperature"_a);
+        multi_def(class_, { "entropy", "phi" }, &G::template phi<ValueType>, "Entropy", "temperature"_a);
+        multi_def(class_,
+                  { "specific_heat_ratio", "gamma" },
+                  &G::template gamma<ValueType>,
+                  "Specific heat ratio",
+                  "temperature"_a);
+        multi_def(class_,
+                  { "specific_heat_pressure", "cp" },
+                  &G::template cp<ValueType>,
+                  "Specific heat pressure",
+                  "temperature"_a);
+        multi_def(class_,
+                  { "pressure_ratio", "pr" },
+                  &G::template pr<ValueType>,
+                  "Pressure Ratio",
+                  "t1"_a,
+                  "t2"_a,
+                  "eff_poly"_a);
+        multi_def(class_,
+                  { "polytropic_efficiency", "eff_poly" },
+                  &G::template eff_poly<const ValueType&>,
+                  "Polytropic efficiency",
+                  "p1"_a,
+                  "t1"_a,
+                  "p2"_a,
+                  "t2"_a);
+    }
 
-        FORWARD_TO_BASE(G, cp, double);
-        FORWARD_TO_BASE(G, cp, A);
+    template <typename Class, class ValueType>
+    void register_extended_interface(Class& class_)
+    {
+        // def("static_t",
+        //       &ThermoExtendedInterface<double>::static_t,
+        //       "Static temperature",
+        //       "tt"_a,
+        //       "mach"_a,
+        //       "tol"_a,
+        //       "max_iter"_a = 30);
 
-        FORWARD_TO_BASE(G, h, double);
-        FORWARD_TO_BASE(G, h, A);
+        // def("t_f_h",
+        //       &ThermoExtendedInterface<double>::t_f_h,
+        //       "Temperature from enthalpy",
+        //       "h"_a,
+        //       "tol"_a,
+        //       "max_iter"_a = 30);
 
-        FORWARD_TO_BASE(G, phi, double);
-        FORWARD_TO_BASE(G, phi, A);
+        // def("t_f_phi",
+        //       &ThermoExtendedInterface<double>::t_f_phi,
+        //       "Temperature from phi function",
+        //       "h"_a,
+        //       "tol"_a,
+        //       "max_iter"_a = 30);
 
-        double r() const override
-        {
-            return G::r();
-        }
+        // def("t_f_pr",
+        //       &ThermoExtendedInterface<double>::t_f_pr,
+        //       "Temperature from pressure ratio",
+        //       "pr"_a,
+        //       "t1"_a,
+        //       "eff_poly"_a,
+        //       "tol"_a,
+        //       "max_iter"_a = 30);
 
-        double pr(const double& t1, const double& t2, const double& eff_poly) const override
-        {
-            return G::pr(t1, t2, eff_poly);
-        }
-        A pr(const A& t1, const A& t2, const A& eff_poly) const override
-        {
-            return G::pr(t1, t2, eff_poly);
-        }
+        // def("mach_f_wqa",
+        //       &ThermoExtendedInterface<double>::mach_f_wqa,
+        //       "Mach number from specific mass flow",
+        //       "pt"_a,
+        //       "tt"_a,
+        //       "wqa"_a,
+        //       "tol"_a,
+        //       "max_iter"_a = 30);
+    }
 
-        double eff_poly(const double& p1, const double& t1, const double& p2, const double& t2) const override
-        {
-            return G::eff_poly(p1, t1, p2, t2);
-        }
-        A eff_poly(const A& p1, const A& t1, const A& p2, const A& t2) const override
-        {
-            return G::eff_poly(p1, t1, p2, t2);
-        }
+    void thermo_base(nanobind::module_& m);
 
-        double static_t(const double& t, const double& mach, double tol, const std::size_t max_iter = 30) const override
-        {
-            return G::static_t(t, mach, tol, max_iter);
-        }
+    void ideal_gas(nanobind::module_& m);
 
-        double t_f_pr(const double& pr,
-                      const double& t1,
-                      const double& eff_poly,
-                      double tol,
-                      std::size_t max_iter = 30) const override
-        {
-            return G::t_f_pr(pr, t1, eff_poly, tol, max_iter);
-        }
-        double t_f_h(const double& h, double tol, std::size_t max_iter = 30) const override
-        {
-            return G::t_f_h(h, tol, max_iter);
-        }
-        double t_f_phi(const double& phi, double tol, std::size_t max_iter = 30) const override
-        {
-            return G::t_f_phi(phi, tol, max_iter);
-        }
-        double mach_f_wqa(
-            const double& pt, const double& tt, const double& wqa, double tol, std::size_t max_iter = 30) const override
-        {
-            return G::mach_f_wqa(pt, tt, wqa, tol, max_iter);
-        }
-    };
-
-#undef FORWARD_TO_BASE
-
-    void thermo_base(pybind11::module_& m);
-
-    void ideal_gas(pybind11::module_& m);
-
-    void poly_gas(pybind11::module_& m);
+    void poly_gas(nanobind::module_& m);
 }
 
 #endif

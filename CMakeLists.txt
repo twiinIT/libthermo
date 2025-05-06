@@ -59,7 +59,7 @@ target_include_directories(
 find_package(Boost COMPONENTS math)
 
 if(WIN32 AND (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC"))
-    target_compile_options(libthermo INTERFACE /arch:AVX2)
+    target_compile_options(libthermo INTERFACE /arch:AVX2 /Zc:lambda)
 elseif(UNIX AND (CMAKE_CXX_COMPILER_ID STREQUAL "GNU"))
     target_compile_options(libthermo INTERFACE -mfma)
 endif()

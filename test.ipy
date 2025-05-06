@@ -1,0 +1,33 @@
+from pythermo import ThermoExtendedInterfaceDouble, IdealGas
+import numpy as np
+
+# res = np.empty(2)
+# IdealGas(288, 1004).h(np.linspace(300, 400, 64), res)
+# print(res)
+
+# temperature = np.linspace(300, 400, 100_000)
+# res = np.empty_like(temperature)
+# %timeit IdealGas(288, 1004).h(temperature, res)
+
+# SIZE = 1_000_000
+# p1 = np.ones(SIZE) * 101325.
+# t1 = np.ones(SIZE) * 288.15
+# p2 = np.ones(SIZE) * 2e5
+# t2 = np.ones(SIZE) * 800.
+
+# res = np.empty_like(p1)
+# %timeit IdealGas(288, 1004).eff_poly(p1, t1, p2, t2, res)
+
+SIZE = 1_000
+p1 = np.ones((SIZE, SIZE)) * 101325.
+t1 = np.ones((SIZE, SIZE)) * 288.15
+p2 = np.ones((SIZE, SIZE)) * 2e5
+t2 = np.ones((SIZE, SIZE)) * 800.
+
+res = np.empty_like(p1)
+%timeit IdealGas(288, 1004).eff_poly(101325, 288.15, 2e5, 800., res)
+# %timeit IdealGas(288, 1004).eff_poly(p1, t1, p2, t2, res)
+print(res)
+
+exit
+

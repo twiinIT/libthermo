@@ -5,14 +5,12 @@ dependencies:
   - cmake
   - make
   - ninja
-  - cxx-compiler
+  - vs2022-msvc-x64
+  - vs2022-win-sdk-x64
   - gtest
-  - xtensor>=0.24,<0.24.6
-  - xsimd=9.*
-  - tbb-devel
-  - xtensor-python
-  - pybind11
+  - xsimd
+  - nanobind
   - python
-  - numpy
   - nlohmann_json
-  - boost
+  - boost-cpp
+  - clang-format

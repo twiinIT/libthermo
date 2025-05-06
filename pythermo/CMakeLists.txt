@@ -4,35 +4,56 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 
+cmake_minimum_required(VERSION 3.15...3.29)
+
 project(pythermo)
 
-set(CMAKE_MODULE_PATH
-    ${CMAKE_SOURCE_DIR}/cmake
-    ${CMAKE_MODULE_PATH})
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(xtensor-python REQUIRED)
-find_package(pybind11 CONFIG REQUIRED)
-find_package(TBB REQUIRED)
-find_package(NumPy REQUIRED)
-find_package(Python COMPONENTS Interpreter Development)
+find_package(Python 3.8
+  REQUIRED COMPONENTS Interpreter Development.Module
+  OPTIONAL_COMPONENTS Development.SABIModule
+)
+execute_process(
+    COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
+    OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE nanobind_ROOT
+)
+
+find_package(nanobind CONFIG REQUIRED)
+find_package(xsimd REQUIRED)
+find_package(libthermo REQUIRED)
 
 set(PYTHERMO_SRCS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-pybind11_add_module(pythermo_core
+nanobind_add_module(
+    pythermo_core
+
+    STABLE_ABI
+    NB_STATIC
+
     ${PYTHERMO_SRCS_DIR}/main.cpp
     ${PYTHERMO_SRCS_DIR}/thermo.cpp
     ${PYTHERMO_SRCS_DIR}/ideal_gas.cpp
-    ${PYTHERMO_SRCS_DIR}/poly_gas.cpp
+    # ${PYTHERMO_SRCS_DIR}/poly_gas.cpp
 )
+
+# target_include_directories(
+#     pythermo_core
+#     PUBLIC $<BUILD_INTERFACE:${CONFIGURABLE_INCLUDE_DIR}> $<INSTALL_INTERFACE:include>
+# )
+
+
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 
 target_link_libraries(pythermo_core
     PUBLIC
         libthermo
     PRIVATE
-        xtensor-python
-        TBB::tbb
+        xsimd
 )
-target_include_directories(pythermo_core PUBLIC ${NUMPY_INCLUDE_DIRS})
+
+# target_include_directories(pythermo_core PUBLIC ${NUMPY_INCLUDE_DIRS})
 
 if (WIN32)
     target_compile_definitions(pythermo_core PUBLIC NOMINMAX)

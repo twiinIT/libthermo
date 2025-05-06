@@ -8,37 +8,113 @@
 #define LIBTHERMO_POLY_GAS_HPP
 
 #include "libthermo/thermo.hpp"
-#include "libthermo/poly_gas.hpp"
 #include "libthermo/exceptions.hpp"
 #include "libthermo/math_utils.hpp"
 #include "libthermo/detail/polyval.hpp"
+
+#include "xsimd/xsimd.hpp"
 
 #include <boost/math/tools/roots.hpp>
 
 #include <cmath>
 #include <vector>
-#include <exception>
 
 
 namespace thermo
 {
+    template <class P>
+    class PolyIdealGas;
+
+    template <class P>
+    class MultiPolyIdealGas;
+
     template <class T, int D>
-    struct PolyGasProps
+    struct PolyIdealGasProps
     {
         using arr_t = std::array<T, D>;
         using value_t = T;
+        static constexpr int size = D;
 
-        PolyGasProps(const arr_t& cp, T h0, T rs);
+        PolyIdealGasProps() = default;
+        PolyIdealGasProps(const arr_t& cp, T h0, T constant);
 
         std::array<T, D> cp_coeffs;
+        T constant;
+        T h0;
+
+    protected:
         std::array<T, D - 1> dcp_coeffs;
         std::array<T, D + 1> h_coeffs;
         std::array<T, D> phi_coeffs;
         T r, phi_log;
+
+        template <class P>
+        friend class PolyIdealGas;
+    };
+
+    template <typename C, class T, int D, int Size>
+    struct resize_container
+    {
+    };
+
+    template <class T, int D, int Size>
+    struct resize_container<std::array<T, D>, T, D, Size>
+    {
+        static constexpr int coeff_count = D;
+
+        using ref_type = std::array<T, D * Size>;
+        using dcp_type = std::array<T, (D - 1) * Size>;
+        using h_type = std::array<T, (D + 1) * Size>;
+        using coeff_type = std::array<T, D>;
+        using result_type = std::array<T, Size>;
+        using data_type = T;
+    };
+
+    template <class T, int D, int Size>
+    struct resize_container<std::vector<T>, T, D, Size>
+    {
+        static constexpr int coeff_count = D;
+
+        using ref_type = std::vector<T>;
+        using dcp_type = std::vector<T>;
+        using h_type = std::vector<T>;
+        using coeff_type = std::vector<T>;
+        using result_type = std::vector<T>;
+        using data_type = T;
+    };
+
+    template <class C, int Size>
+    struct PolyIdealGasMultiProps
+    {
+        PolyIdealGasMultiProps(const PolyIdealGasMultiProps& other) = default;
+
+        using value_type = typename C::value_type;
+
+        using ref_type = typename resize_container<C, value_type, 8, Size>::ref_type;
+        using result_type = typename resize_container<C, value_type, 8, Size>::result_type;
+        using coeff_type = typename resize_container<C, value_type, 8, Size>::coeff_type;
+        using dcp_type = typename resize_container<C, value_type, 8, Size>::dcp_type;
+        using h_type = typename resize_container<C, value_type, 8, Size>::h_type;
+
+        using value_t = value_type;
+
+        PolyIdealGasMultiProps() = default;
+
+        ref_type cp_coeffs;
+        // coeff_type constant;
+
+    protected:
+        dcp_type dcp_coeffs;
+        h_type h_coeffs;
+        ref_type phi_coeffs;
+        result_type r, phi_log;
+
+        template <class P>
+        friend class MultiPolyIdealGas;
     };
 
     template <class T, int D>
-    PolyGasProps<T, D>::PolyGasProps(const arr_t& cp, T h0, T rs)
+    PolyIdealGasProps<T, D>::PolyIdealGasProps(const arr_t& cp, T h0, T rs)
         : cp_coeffs(cp)
         , r(rs)
     {
@@ -56,12 +132,12 @@ namespace thermo
     }
 
     template <class T, int D>
-    PolyGasProps<T, D> mix(const std::vector<typename PolyGasProps<T, D>::arr_t>& cps,
-                           const std::vector<T>& h0s,
-                           const std::vector<T>& rs,
-                           const std::vector<T>& weights)
+    PolyIdealGasProps<T, D> mix(const std::vector<typename PolyIdealGasProps<T, D>::arr_t>& cps,
+                                const std::vector<T>& h0s,
+                                const std::vector<T>& rs,
+                                const std::vector<T>& weights)
     {
-        typename PolyGasProps<T, D>::arr_t mix_cp;
+        typename PolyIdealGasProps<T, D>::arr_t mix_cp;
         T mix_h0 = 0., mix_r = 0.;
         mix_cp.fill(0.);
 
@@ -92,17 +168,18 @@ namespace thermo
             mix_r /= total_weight;
         }
 
-        return PolyGasProps<T, D>(mix_cp, mix_h0, mix_r);
+        return PolyIdealGasProps<T, D>(mix_cp, mix_h0, mix_r);
     }
 
     template <class P>
-    class PolyGas : public Thermo<PolyGas<P>>
+    class PolyIdealGas : public Thermo<PolyIdealGas<P>>
     {
     public:
         using value_t = typename P::value_t;
 
-        PolyGas(const P& properties)
-            : m_props(properties){};
+        PolyIdealGas() = default;
+        PolyIdealGas(const P& properties)
+            : m_props(properties) {};
 
         template <class T, IS_NOT_XTENSOR>
         auto gamma(const T& t) const;
@@ -162,13 +239,30 @@ namespace thermo
             return m_props;
         }
 
+        P& properties()
+        {
+            return m_props;
+        }
+
     protected:
         P m_props;
     };
 
     template <class P>
+    class MultiPolyIdealGas : public PolyIdealGas<P>
+    {
+    public:
+        MultiPolyIdealGas() = default;
+        MultiPolyIdealGas(const P& properties)
+            : PolyIdealGas<P>(properties) {};
+
+        template <class T, class C>
+        auto h(const T& t, C& res) const;
+    };
+
+    template <class P>
     template <class T, IS_NOT_XTENSOR_>
-    auto PolyGas<P>::gamma(const T& t) const
+    auto PolyIdealGas<P>::gamma(const T& t) const
     {
         auto tmp_cp = cp(t);
         return tmp_cp / (tmp_cp - m_props.r);
@@ -176,7 +270,7 @@ namespace thermo
 
     template <class P>
     template <class T>
-    auto PolyGas<P>::cp(const T& t) const
+    auto PolyIdealGas<P>::cp(const T& t) const
     {
         using namespace detail;
 
@@ -185,16 +279,54 @@ namespace thermo
 
     template <class P>
     template <class T>
-    auto PolyGas<P>::h(const T& t) const
+    auto PolyIdealGas<P>::h(const T& t) const
     {
         using namespace detail;
 
         return polyval(t, m_props.h_coeffs);
     }
 
+    template <class B, int D>
+    struct poly_multi_eval
+    {
+        template <class T>
+        static inline auto eval(B b, T* coeff, std::size_t step)
+        {
+            // std::cout << "Coeff " << D << " : " << *coeff << std::endl;
+            B c = B::load_unaligned(coeff);
+            return xsimd::fma(b, poly_multi_eval<B, D - 1>::eval(b, coeff - step, step), c);
+        };
+    };
+
+    template <class B>
+    struct poly_multi_eval<B, 0>
+    {
+        template <class T>
+        static inline B eval(B /*b*/, T* coeff, std::size_t /*step*/)
+        {
+            // std::cout << "Coeff 0 : " << *coeff << std::endl;
+            return B::load_unaligned(coeff);
+        };
+    };
+
+    template <class P>
+    template <class T, class C>
+    auto MultiPolyIdealGas<P>::h(const T& t, C& res) const
+    {
+        using avx2_type = xsimd::batch<double, xsimd::avx2>;
+        std::size_t inc = avx2_type::size;
+
+        for (std::size_t i = 0; i < res.size(); i += inc)
+        {
+            avx2_type res_vec = poly_multi_eval<avx2_type, 8>::eval(
+                avx2_type(t), &this->m_props.h_coeffs[res.size() * 8 + i], res.size());
+            res_vec.store_unaligned(&res[i]);
+        }
+    }
+
     template <class P>
     template <class T, IS_NOT_XTENSOR_>
-    auto PolyGas<P>::phi(const T& t) const
+    auto PolyIdealGas<P>::phi(const T& t) const
     {
         using namespace detail;
 
@@ -203,7 +335,7 @@ namespace thermo
 
     template <class P>
     template <class T, IS_NOT_XTENSOR_>
-    auto PolyGas<P>::dphi(const T& t1, const T& t2) const
+    auto PolyIdealGas<P>::dphi(const T& t1, const T& t2) const
     {
         using namespace detail;
 
@@ -212,28 +344,28 @@ namespace thermo
     }
 
     template <class P>
-    inline typename P::value_t PolyGas<P>::r() const
+    inline typename P::value_t PolyIdealGas<P>::r() const
     {
         return m_props.r;
     }
 
     template <class P>
     template <class T, IS_NOT_XTENSOR_>
-    auto PolyGas<P>::pr(const T& t1, const T& t2, const T& eff_poly) const
+    auto PolyIdealGas<P>::pr(const T& t1, const T& t2, const T& eff_poly) const
     {
         return std::exp(dphi(t1, t2) * eff_poly / m_props.r);
     }
 
     template <class P>
     template <class T, IS_NOT_XTENSOR_>
-    auto PolyGas<P>::eff_poly(const T& p1, const T& t1, const T& p2, const T& t2) const
+    auto PolyIdealGas<P>::eff_poly(const T& p1, const T& t1, const T& p2, const T& t2) const
     {
         return r() * log(p2 / p1) / dphi(t1, t2);
     }
 
     template <class P>
     template <class T>
-    inline auto PolyGas<P>::static_t(const T& tt, const T& mach, double tol, std::size_t max_iter) const
+    inline auto PolyIdealGas<P>::static_t(const T& tt, const T& mach, double tol, std::size_t max_iter) const
     {
         using namespace math;
         using namespace detail;
@@ -279,14 +411,14 @@ namespace thermo
 
     template <class P>
     template <class T>
-    auto PolyGas<P>::t_f_pr(const T& pr, const T& t1, const T& eff_poly, double tol, std::size_t max_iter) const
+    auto PolyIdealGas<P>::t_f_pr(const T& pr, const T& t1, const T& eff_poly, double tol, std::size_t max_iter) const
     {
         return t_f_phi(std::log(pr) * m_props.r / eff_poly + phi(t1), tol, max_iter);
     }
 
     template <class P>
     template <class T>
-    auto PolyGas<P>::t_f_h(const T& h_in, double tol, std::size_t max_iter) const
+    auto PolyIdealGas<P>::t_f_h(const T& h_in, double tol, std::size_t max_iter) const
     {
         using namespace detail;
 
@@ -320,7 +452,7 @@ namespace thermo
 
     template <class P>
     template <class T>
-    auto PolyGas<P>::t_f_phi(const T& phi_in, double tol, std::size_t max_iter) const
+    auto PolyIdealGas<P>::t_f_phi(const T& phi_in, double tol, std::size_t max_iter) const
     {
         using namespace detail;
 
@@ -350,7 +482,7 @@ namespace thermo
 
     template <class P>
     template <class T>
-    auto PolyGas<P>::mach_f_wqa(const T& pt, const T& tt, const T& wqa, double tol, std::size_t max_iter) const
+    auto PolyIdealGas<P>::mach_f_wqa(const T& pt, const T& tt, const T& wqa, double tol, std::size_t max_iter) const
     {
         using namespace detail;
         using namespace math;
@@ -368,21 +500,24 @@ namespace thermo
         if (wqa < 0. || wqa > wqa_crit)
             throw domain_error();
 
-        auto err_v = [&](double ts) -> double {
+        auto err_v = [&](double ts) -> double
+        {
             ps = pt * pr(tt, ts, 1.);
             v = std::sqrt(2 * (ht - h(ts)));
             return ps / (r_ * ts) * v - wqa;
         };
 
         boost::uintmax_t niter = max_iter;
-        auto res = boost::math::tools::toms748_solve(err_v,
-                                                     ts_crit,
-                                                     tt,
-                                                     [&tol](const auto& a, const auto& b) -> bool {
-                                                         using std::fabs;
-                                                         return fabs(a - b) / (std::min)(fabs(a), fabs(b)) <= tol;
-                                                     },
-                                                     niter);
+        auto res = boost::math::tools::toms748_solve(
+            err_v,
+            ts_crit,
+            tt,
+            [&tol](const auto& a, const auto& b) -> bool
+            {
+                using std::fabs;
+                return fabs(a - b) / (std::min) (fabs(a), fabs(b)) <= tol;
+            },
+            niter);
         ts = res.first;
         ps = pt * pr(tt, ts, 1.);
         v = std::sqrt(2 * (ht - h(ts)));

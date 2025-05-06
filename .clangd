@@ -1,0 +1,6 @@
+CompileFlags:
+  Add: [
+    -IC:\\Users\\adrie\\micromamba\\envs\\libthermo\\Library\\vs_buildtools\\VC\\Tools\\MSVC\\14.43.34808\\include,
+    -IC:\\Users\\adrie\\micromamba\\envs\\libthermo\\Library\\vs_buildtools\\Windows Kits\\10\\Include\\10.0.18362.0\\shared,
+    -IC:\\Users\\adrie\\micromamba\\envs\\libthermo\\Library\\vs_buildtools\\Windows Kits\\10\\Include\\10.0.18362.0\\um,
+    -IC:\\Users\\adrie\\micromamba\\envs\\libthermo\\Library\\vs_buildtools\\Windows Kits\\10\\Include\\10.0.18362.0\\ucrt]

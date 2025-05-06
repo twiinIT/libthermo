@@ -61,11 +61,6 @@ template <class T>
 struct TP1906Props : PolyIdealGasProps<double, 8>
 {
     double m_far = 0., m_war = 0.;
-    TP1906Props()
-    {
-        update(0, 0);
-    }
-
     TP1906Props(double FARB, double WAR)
     {
         update(FARB, WAR);
@@ -127,15 +122,22 @@ main()
     auto t1 = std::chrono::high_resolution_clock::now();
 
     volatile double res;
-    std::vector<PolyIdealGas<TP1906Props<double>>> gases(100);
+
+    PolyIdealGas g1(TP1906Props<double>(0., 0.));
+    PolyIdealGas<PolyGasDynamicProps<double>> g2;
+
+    auto& props1 = g1.properties();
+    auto& props2 = g2.properties();
+    std::array<double, 2> composition{ 1, 0 };
 
     for (auto i = 0; i < repeat; ++i)
     {
-        for (auto& g : gases)
-        {
-            g.properties().update(i * 1e-10, 0.);
-            res = g.h(288.15);
-        }
+        props1.update(i * 1e-10, 0.);
+        res = g1.h(288.15);
+        // res = g1.pr(288.15, 400., 0.8);
+
+        // props2.update(i * 1e-12, 0.);
+        // res = g2.h(288.15);
     }
 
     auto t2 = std::chrono::high_resolution_clock::now();
@@ -144,10 +146,10 @@ main()
     std::cout << t << std::endl;
 
 
-    // g1.properties().update(0.012, 0.0);
-    // std::cout << "libthermo r: " << g1.r() << " J/kg\n";
-    // std::cout << "libthermo cp: " << g1.cp(288.15) << std::endl;
-    // std::cout << "libthermo h: " << g1.h(288.15) << std::endl;
+    g1.properties().update(0.012, 0.0);
+    std::cout << "libthermo r: " << g1.r() << " J/kg\n";
+    std::cout << "libthermo cp: " << g1.cp(288.15) << std::endl;
+    std::cout << "libthermo h: " << g1.h(288.15) << std::endl;
     // std::cout << g1.pr(288.15, 400., 0.8) << std::endl;
 
     // g2.properties().update(0.012, 0.005);

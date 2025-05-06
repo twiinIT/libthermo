@@ -3,10 +3,10 @@ import timeit
 
 import numpy as np
 
-from pythermo import IdealGas, PolyGas8, PolyGasProps8
+from pythermo import IdealGas, PolyGas8, PolyIdealGasProps8
 
 
-class PolyGas(PolyGas8):
+class PolyIdealGas(PolyGas8):
     def __init__(self) -> None:
         cp_coeffs = [
             2.35822e-20,
@@ -18,11 +18,11 @@ class PolyGas(PolyGas8):
             -0.521742,
             1068.43,
         ]
-        super().__init__(PolyGasProps8(cp_coeffs, 0.0, 287.05))
+        super().__init__(PolyIdealGasProps8(cp_coeffs, 0.0, 287.05))
 
 
 ideal_g = IdealGas(287, 1004)
-real_g = PolyGas()
+real_g = PolyIdealGas()
 
 
 def bench_numpy(g, size, repeat, number):
@@ -36,7 +36,7 @@ def bench_numpy(g, size, repeat, number):
 
     results = dict()
 
-    print(f"Benchmark pythermo - PolyGas - {N} elements")
+    print(f"Benchmark pythermo - PolyIdealGas - {N} elements")
 
     results["size"] = [
         N,

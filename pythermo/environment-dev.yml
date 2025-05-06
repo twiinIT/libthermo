@@ -2,7 +2,9 @@ name: pythermo-dev
 channels:
   - conda-forge
 dependencies:
-  - cxx-compiler
+#  - cxx-compiler
+  - vs2022-msvc-x64
+  - vs2022-win-sdk-x64
   - cmake
   - ninja
   - gtest
@@ -13,3 +15,6 @@ dependencies:
   - xsimd
   - xtensor-python
   - numpy
+  - tbb-devel
+  - nlohmann_json
+  - boost

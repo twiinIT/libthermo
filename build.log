@@ -1,0 +1,3 @@
+ninja: Entering directory `build'
+[1/2] Building CXX object benchs\CMakeFiles\thermo_benchs.dir\multiprops_array.cc.obj
+[2/2] Linking CXX executable benchs\thermo_benchs.exe

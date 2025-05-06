@@ -11,10 +11,10 @@
 
 // clang-format off
 #ifdef LIBTHERMO_USE_XTENSOR
-    #include "xtensor/xcontainer.hpp"
-    #include "xtensor/xtensor.hpp"
-    #include "xtensor/xfunction.hpp"
-    #include "xtensor/xexpression.hpp"
+    #include "xtensor/containers/xcontainer.hpp"
+    #include "xtensor/containers/xtensor.hpp"
+    #include "xtensor/core/xfunction.hpp"
+    #include "xtensor/core/xexpression.hpp"
     #include "xsimd/xsimd.hpp"
 
     #define IS_NOT_XEXPRESSION std::enable_if_t<!xt::is_xexpression<E>::value, int> = 0

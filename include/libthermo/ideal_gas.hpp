@@ -9,8 +9,11 @@
 
 #include "libthermo/thermo.hpp"
 #include "libthermo/math_utils.hpp"
+#include "libthermo/thread_pool.hpp"
 
 #include <boost/math/tools/roots.hpp>
+
+#include <xsimd/xsimd.hpp>
 
 #include <cmath>
 
@@ -24,7 +27,7 @@ namespace thermo
         IdealGas(const D& r, const D& cp)
             : m_r(r)
             , m_cp(cp)
-            , m_gamma(cp / (cp - r)){};
+            , m_gamma(cp / (cp - r)) {};
 
         template <class P>
         IdealGas(const P& props)
@@ -69,7 +72,13 @@ namespace thermo
         auto eff_poly(const T& p1, const T& t1, const T& p2, const T& t2) const;
 
         template <class T>
+        void eff_poly(T* res, T* p1, T* t1, T* p2, T* t2, std::size_t size) const;
+
+        template <class T>
         auto h(const T& t) const;
+
+        template <class T>
+        void h(T* res, T* temperature, std::size_t size) const;
 
         double r() const;
 
@@ -142,7 +151,33 @@ namespace thermo
     template <class T, IS_NOT_XTENSOR_>
     auto IdealGas<D>::eff_poly(const T& p1, const T& t1, const T& p2, const T& t2) const
     {
-        return r() / m_cp * log(p2 / p1) / std::log(t2 / t1);
+        return r() / m_cp * std::log(p2 / p1) / std::log(t2 / t1);
+    }
+
+
+    template <class D>
+    template <class T>
+    void IdealGas<D>::eff_poly(T* res, T* p1, T* t1, T* p2, T* t2, std::size_t size) const
+    {
+        using b_type = xsimd::batch<double, xsimd::avx2>;
+        std::size_t inc = b_type::size;
+
+        std::size_t vec_size = size - size % inc;
+        b_type cp = m_cp;
+
+        for (std::size_t i = 0; i < vec_size; i += inc)
+        {
+            b_type p1_vec = b_type::load_unaligned(&p1[i]);
+            b_type t1_vec = b_type::load_unaligned(&t1[i]);
+            b_type p2_vec = b_type::load_unaligned(&p2[i]);
+            b_type t2_vec = b_type::load_unaligned(&t2[i]);
+
+            b_type r_vec = m_r / cp * xsimd::log(p2_vec / p1_vec) / xsimd::log(t2_vec / t1_vec);
+            r_vec.store_unaligned(&res[i]);
+        }
+
+        for (std::size_t i = vec_size; i < size; ++i)
+            res[i] = eff_poly(p1[i], t1[i], p2[i], t2[i]);
     }
 
     template <class D>
@@ -150,6 +185,55 @@ namespace thermo
     auto IdealGas<D>::h(const T& t) const
     {
         return m_cp * t;
+    }
+
+    template <class D>
+    template <class T>
+    void IdealGas<D>::h(T* res, T* temperature, std::size_t size) const
+    {
+        using b_type = xsimd::batch<double, xsimd::avx2>;
+        std::size_t inc = b_type::size;
+
+        std::size_t vec_size = size - size % inc;
+        b_type cp = m_cp;
+
+        for (std::size_t i = 0; i < vec_size; i += inc)
+        {
+            b_type t_vec = b_type::load_unaligned(&temperature[i]);
+            b_type r_vec = cp * t_vec;
+            r_vec.store_unaligned(&res[i]);
+        }
+
+        for (std::size_t i = vec_size; i < size; ++i)
+            res[i] = m_cp * temperature[i];
+
+        // thread_pool<std::size_t> pool(4);
+        // // pool.resume();
+
+        // auto vectorized_compute = [temperature, res, this](std::size_t /*runner*/, std::size_t start, std::size_t
+        // end)
+        // {
+        //     using b_type = xsimd::batch<double, xsimd::avx2>;
+        //     std::size_t inc = b_type::size;
+
+        //     std::size_t size = end - start;
+        //     std::size_t vec_end = start + size - size % inc;
+
+        //     // std::cout << start << " / " << end << " / " << size << " / " << vec_end << std::endl << std::flush;
+        //     for (std::size_t i = start; i < vec_end; i += inc)
+        //     {
+        //         b_type t_vec = b_type::load_unaligned(&temperature[i]);
+        //         b_type r_vec = m_cp * t_vec;
+        //         r_vec.store_unaligned(&res[i]);
+        //     }
+
+        //     for (std::size_t i = vec_end; i < end; ++i)
+        //         res[i] = m_cp * temperature[i];
+        // };
+
+        // pool.run_blocks(0, size, vectorized_compute, 4);
+
+        // pool.pause();
     }
 
     template <class D>
@@ -231,7 +315,7 @@ namespace thermo
             [&tol](const auto& a, const auto& b) -> bool
             {
                 using std::fabs;
-                return fabs(a - b) / (std::min)(fabs(a), fabs(b)) <= tol;
+                return fabs(a - b) / (std::min) (fabs(a), fabs(b)) <= tol;
             },
             niter);
         return res.first;

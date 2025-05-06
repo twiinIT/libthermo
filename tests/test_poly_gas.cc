@@ -11,10 +11,10 @@
 
 using namespace thermo;
 
-TEST(PolyGas, cp_tensor)
+TEST(PolyIdealGas, cp_tensor)
 {
-    auto props = PolyGasProps<4>({ 0., 0., 0., 1004.4 }, 0., 287.05);
-    auto dry_air = PolyGas(props);
+    auto props = PolyIdealGasProps<4>({ 0., 0., 0., 1004.4 }, 0., 287.05);
+    auto dry_air = PolyIdealGas(props);
 
     EXPECT_EQ(dry_air.r(), 287.05);
     EXPECT_EQ(dry_air.h(1000.), 1004400.0);

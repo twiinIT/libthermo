@@ -1,4 +1,4 @@
-from build.pythermo.pythermo import IdealGas, PolyGas8, PolyGasProps8
+from build.pythermo.pythermo import IdealGas, PolyGas8, PolyIdealGasProps8
 
 g = IdealGas(287, 1004)
 
@@ -18,13 +18,13 @@ print("Benchmark pythermo IdealGas")
 %timeit -r 100 -n 10 rres = g.pr(t1, t2, eff)
 %timeit -r 100 -n 10 rres = g.eff_poly(p1, t1, p2, t2)
 
-class PolyGas(PolyGas8):
+class PolyIdealGas(PolyGas8):
     def __init__(self) -> None:
         cp_coeffs = [ 2.35822e-20,  -1.79613e-16, 4.70972e-13, -3.3094e-10,
                 -6.27984e-07, 0.00123785,   -0.521742,   1068.43 ]
-        super().__init__(PolyGasProps8(cp_coeffs, 0., 287.05))
+        super().__init__(PolyIdealGasProps8(cp_coeffs, 0., 287.05))
 
-g = PolyGas()
+g = PolyIdealGas()
 print("Benchmark pythermo PolyGas8")
 %timeit -r 100 -n 10 rres = g.cp(t1)
 %timeit -r 100 -n 10 rres = g.phi(t1)

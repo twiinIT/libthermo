@@ -11,20 +11,18 @@
 #include "libthermo/ideal_gas.hpp"
 #include "libthermo/poly_gas.hpp"
 
-#include "xtensor-python/pytensor.hpp"
-#include "xtensor-python/pyarray.hpp"
 
+namespace nb = nanobind;
 
-namespace py = pybind11;
 using namespace thermo;
 using namespace pythermo;
 
-PYBIND11_MODULE(pythermo_core, m)
+NB_MODULE(pythermo_core, m)
 {
-    xt::import_numpy();
+    // xt::import_numpy();
 
     m.doc() = "Python bindings of the C++ implementation of the thermodynamic library 'libthermo'.";
     thermo_base(m);
     ideal_gas(m);
-    poly_gas(m);
+    // poly_gas(m);
 }
