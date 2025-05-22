@@ -58,12 +58,10 @@ struct TP1906Props : PolyIdealGasMultiProps<C, S>
                 avx2_type farb_vec = avx2_type::load_unaligned(&FARB[b]);
                 avx2_type war_vec = avx2_type::load_unaligned(&WAR[b]);
                 avx2_type total = 1. / (1. + farb_vec + war_vec);
-
                 avx2_type cp_mix_vec = xsimd::fma(fuel_cp_coeffs_vec,
                                                   farb_vec,
                                                   xsimd::fma(water_cp_coeffs_vec, war_vec, air_cp_coeffs_vec))
                                        * total;
-
                 cp_mix_vec.store_unaligned(&this->cp_coeffs[i * size + b]);
 
                 avx2_type dc_mix_vec = cp_mix_vec * dc_scalars_vec;
@@ -98,7 +96,7 @@ struct TP1906Props : PolyIdealGasMultiProps<C, S>
 int
 main()
 {
-    constexpr int size = 64;
+    constexpr int size = 32;
     constexpr int repeat = 10000000;
     auto t1 = std::chrono::high_resolution_clock::now();
 

@@ -1,6 +1,7 @@
 set(thermo_benchs_srcs 
-    # main.cc
-    multiprops_array.cc
+    main.cc
+    # multiprops_array.cc
+    # multiprops_vector.cc
 )
 
 find_package(fmt REQUIRED)
@@ -10,7 +11,7 @@ find_package(nlohmann_json 3.11.2 REQUIRED)
 
 add_executable(thermo_benchs ${thermo_benchs_srcs})
 
-target_compile_options(thermo_benchs PUBLIC /utf-8)
+target_compile_options(thermo_benchs PUBLIC /utf-8 /arch:AVX2 /FA)
 
 add_definitions(-DXTENSOR_TBB_THRESHOLD=5000)
 # add_definitions(-DXTENSOR_USE_TBB)

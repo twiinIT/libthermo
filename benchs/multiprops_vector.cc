@@ -1,12 +1,5 @@
-#include "libthermo/ideal_gas.hpp"
 #include "libthermo/poly_gas.hpp"
 
-#include "cantera/thermo/NasaPoly1.h"
-#include <cantera/thermo/IdealGasPhase.h>
-#include <cantera/thermo/Species.h>
-
-
-#include <memory>
 #include <iostream>
 #include <chrono>
 #include <array>
@@ -50,7 +43,7 @@ struct TP1906Props : PolyIdealGasMultiProps<C, S>
         }
 
         this->cp_coeffs.resize(FARB.size() * 8);
-        this->dcp_coeffs.resize(FARB.size() * 7);
+        this->dcp_coeffs.resize(FARB.size() * 8);  // Allocate 8 instead of 7 slots to allow SIMD
         this->h_coeffs.resize(FARB.size() * 9);
         this->phi_coeffs.resize(FARB.size() * 8);
 
@@ -62,21 +55,21 @@ struct TP1906Props : PolyIdealGasMultiProps<C, S>
 
         std::size_t size = FARB.size();
 
-        for (std::size_t i = 7; i < 8; --i)
+        for (std::size_t b = 0; b < size; b += inc)
         {
-            avx2_type air_cp_coeffs_vec = air_cp_coeffs[i];
-            avx2_type fuel_cp_coeffs_vec = fuel_cp_coeffs[i];
-            avx2_type water_cp_coeffs_vec = water_cp_coeffs[i];
+            avx2_type farb_vec = avx2_type::load_unaligned(&FARB[b]);
+            avx2_type war_vec = avx2_type::load_unaligned(&WAR[b]);
+            avx2_type total = 1. / (1. + farb_vec + war_vec);
 
-            avx2_type h_scalars_vec = h_scalars[i];
-            avx2_type dc_scalars_vec = dc_scalars[i];
-            avx2_type fi_scalars_vec = fi_scalars[i];
-
-            for (std::size_t b = 0; b < size; b += inc)
+            for (std::size_t i = 0; i < 8; ++i)
             {
-                avx2_type farb_vec = avx2_type::load_unaligned(&FARB[b]);
-                avx2_type war_vec = avx2_type::load_unaligned(&WAR[b]);
-                avx2_type total = 1. / (1. + farb_vec + war_vec);
+                avx2_type air_cp_coeffs_vec = air_cp_coeffs[i];
+                avx2_type fuel_cp_coeffs_vec = fuel_cp_coeffs[i];
+                avx2_type water_cp_coeffs_vec = water_cp_coeffs[i];
+
+                avx2_type h_scalars_vec = h_scalars[i];
+                avx2_type dc_scalars_vec = dc_scalars[i];
+                avx2_type fi_scalars_vec = fi_scalars[i];
 
                 avx2_type cp_mix_vec = xsimd::fma(fuel_cp_coeffs_vec,
                                                   farb_vec,
@@ -94,12 +87,6 @@ struct TP1906Props : PolyIdealGasMultiProps<C, S>
                 avx2_type h_mix_vec = cp_mix_vec * h_scalars_vec;
                 h_mix_vec.store_unaligned(&this->h_coeffs[i * size + b]);
             }
-        }
-        for (std::size_t b = 0; b < size; b += inc)
-        {
-            avx2_type farb_vec = avx2_type::load_unaligned(&FARB[b]);
-            avx2_type war_vec = avx2_type::load_unaligned(&WAR[b]);
-            avx2_type total = 1. / (1. + farb_vec + war_vec);
 
             avx2_type r_vec = (287.05287 + farb_vec * 287.05287 + war_vec * 461.522) * total;
             r_vec.store_unaligned(&this->r[b]);
@@ -117,8 +104,8 @@ struct TP1906Props : PolyIdealGasMultiProps<C, S>
 int
 main()
 {
-    constexpr int size = 128;
-    constexpr int repeat = 10000000;
+    constexpr int size = 1024;
+    constexpr int repeat = 100000;
     auto t1 = std::chrono::high_resolution_clock::now();
 
     std::vector<double> res(size);

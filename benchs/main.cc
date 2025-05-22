@@ -1,4 +1,3 @@
-#include "libthermo/ideal_gas.hpp"
 #include "libthermo/poly_gas.hpp"
 
 #include <memory>
@@ -73,8 +72,8 @@ struct TP1906Props : PolyIdealGasProps<double, 8>
 
     void update(double FARB, double WAR)
     {
-        if (FARB + WAR == m_far + m_war)
-            return;
+        // if (FARB + WAR == m_far + m_war)
+        //     return;
 
         m_far = FARB;
         m_war = WAR;
@@ -83,13 +82,12 @@ struct TP1906Props : PolyIdealGasProps<double, 8>
         r = (287.05287 + FARB * 287.05287 + WAR * 461.522) * total;
 
         using avx2_type = xsimd::batch<double, xsimd::avx2>;
-        // using sse2_type = xsimd::batch<double, xsimd::sse2>;
         std::size_t inc = avx2_type::size;
 
         avx2_type farb_vec = FARB;
         avx2_type war_vec = WAR;
 
-        for (std::size_t i = 4; i < 8; i -= inc)
+        for (std::size_t i = 0; i < 8; i += inc)
         {
             avx2_type air_cp_coeffs_vec = avx2_type::load_unaligned(&air_cp_coeffs[i]);
             avx2_type fuel_cp_coeffs_vec = avx2_type::load_unaligned(&fuel_cp_coeffs[i]);
@@ -123,19 +121,16 @@ struct TP1906Props : PolyIdealGasProps<double, 8>
 int
 main()
 {
-    constexpr int repeat = 10000000;
-    auto t1 = std::chrono::high_resolution_clock::now();
-
+    constexpr int repeat = 1000000;
     volatile double res;
-    std::vector<PolyIdealGas<TP1906Props<double>>> gases(100);
+    PolyIdealGas<TP1906Props<double>> g{};
+
+    auto t1 = std::chrono::high_resolution_clock::now();
 
     for (auto i = 0; i < repeat; ++i)
     {
-        for (auto& g : gases)
-        {
-            g.properties().update(i * 1e-10, 0.);
-            res = g.h(288.15);
-        }
+        g.properties().update(0., 0.);
+        res = g.h(288.15);
     }
 
     auto t2 = std::chrono::high_resolution_clock::now();
@@ -143,6 +138,21 @@ main()
              / static_cast<double>(repeat);
     std::cout << t << std::endl;
 
+    constexpr int repeat2 = 100000;
+    std::vector<PolyIdealGas<TP1906Props<double>>> gases(1024);
+    t1 = std::chrono::high_resolution_clock::now();
+    for (auto i = 0; i < repeat2; ++i)
+    {
+        for (auto& g : gases)
+        {
+            g.properties().update(0., 0.);
+            res = g.h(288.15);
+        }
+    }
+    t2 = std::chrono::high_resolution_clock::now();
+    t = static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count())
+        / static_cast<double>(repeat2 * gases.size());
+    std::cout << t << std::endl;
 
     // g1.properties().update(0.012, 0.0);
     // std::cout << "libthermo r: " << g1.r() << " J/kg\n";

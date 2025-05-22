@@ -53,12 +53,12 @@ namespace thermo
     };
 
     template <typename C, class T, int D, int Size>
-    struct resize_container
+    struct MultiPropsInnerTypes
     {
     };
 
     template <class T, int D, int Size>
-    struct resize_container<std::array<T, D>, T, D, Size>
+    struct MultiPropsInnerTypes<std::array<T, D>, T, D, Size>
     {
         static constexpr int coeff_count = D;
 
@@ -71,7 +71,7 @@ namespace thermo
     };
 
     template <class T, int D, int Size>
-    struct resize_container<std::vector<T>, T, D, Size>
+    struct MultiPropsInnerTypes<std::vector<T>, T, D, Size>
     {
         static constexpr int coeff_count = D;
 
@@ -88,15 +88,13 @@ namespace thermo
     {
         PolyIdealGasMultiProps(const PolyIdealGasMultiProps& other) = default;
 
-        using value_type = typename C::value_type;
-
-        using ref_type = typename resize_container<C, value_type, 8, Size>::ref_type;
-        using result_type = typename resize_container<C, value_type, 8, Size>::result_type;
-        using coeff_type = typename resize_container<C, value_type, 8, Size>::coeff_type;
-        using dcp_type = typename resize_container<C, value_type, 8, Size>::dcp_type;
-        using h_type = typename resize_container<C, value_type, 8, Size>::h_type;
-
-        using value_t = value_type;
+        using inner_types = MultiPropsInnerTypes<C, typename C::value_type, 8, Size>;
+        using value_t = typename inner_types::data_type;
+        using data_type = typename inner_types::data_type;
+        using dcp_type = typename inner_types::dcp_type;
+        using h_type = typename inner_types::h_type;
+        using ref_type = typename inner_types::ref_type;
+        using result_type = typename inner_types::result_type;
 
         PolyIdealGasMultiProps() = default;
 
