@@ -32,40 +32,22 @@ namespace thermo
             , m_cp(props.cp())
             , m_gamma(props.cp() / (props.cp() - props.r())){};
 
-        template <class T, IS_NOT_XTENSOR>
+        template <class T>
         auto gamma(const T& t) const;
 
-        template <class T, IS_XTENSOR>
-        auto gamma(const T& t) const;
-
-        template <class T, IS_NOT_XTENSOR>
+        template <class T>
         auto cp(const T& = 0.) const;
 
-        template <class T, IS_XTENSOR>
-        auto cp(const T& = 0.) const;
-
-        template <class T, IS_NOT_XTENSOR>
+        template <class T>
         auto phi(const T& t) const;
 
-        template <class T, IS_XTENSOR>
-        auto phi(const T& t) const;
-
-        template <class T, IS_NOT_XTENSOR>
+        template <class T>
         auto pr(const T& t1, const T& t2, const T& eff_poly) const;
 
-        template <class T, class E, IS_XTENSOR>
-        auto pr(const T& t1, const T& t2, const E& eff_poly) const;
-
-        template <class T, IS_NOT_XTENSOR>
+        template <class T>
         auto Tau(const T& p1, const T& p2, const T& eff_poly) const;
 
-        template <class T, class E, IS_XTENSOR>
-        auto Tau(const T& p1, const T& p2, const E& eff_poly) const;
-
-        template <class T, IS_NOT_XTENSOR>
-        auto eff_poly(const T& p1, const T& t1, const T& p2, const T& t2) const;
-
-        template <class T, IS_XTENSOR>
+        template <class T>
         auto eff_poly(const T& p1, const T& t1, const T& p2, const T& t2) const;
 
         template <class T>
@@ -104,42 +86,42 @@ namespace thermo
     };
 
     template <class D>
-    template <class T, IS_NOT_XTENSOR_>
+    template <class T>
     auto IdealGas<D>::gamma(const T&) const
     {
         return m_gamma;
     }
 
     template <class D>
-    template <class T, IS_NOT_XTENSOR_>
+    template <class T>
     auto IdealGas<D>::cp(const T&) const
     {
         return m_cp;
     }
 
     template <class D>
-    template <class T, IS_NOT_XTENSOR_>
+    template <class T>
     auto IdealGas<D>::phi(const T& t) const
     {
         return m_cp * std::log(t);
     }
 
     template <class D>
-    template <class T, IS_NOT_XTENSOR_>
+    template <class T>
     auto IdealGas<D>::pr(const T& t1, const T& t2, const T& eff_poly) const
     {
         return std::exp(std::log(t2 / t1) * eff_poly * m_cp / m_r);
     }
 
     template <class D>
-    template <class T, IS_NOT_XTENSOR_>
+    template <class T>
     auto IdealGas<D>::Tau(const T& p1, const T& p2, const T& eff_poly) const
     {
         return std::exp(std::log(p2 / p1) * m_r / (eff_poly * m_cp));
     }
 
     template <class D>
-    template <class T, IS_NOT_XTENSOR_>
+    template <class T>
     auto IdealGas<D>::eff_poly(const T& p1, const T& t1, const T& p2, const T& t2) const
     {
         return r() / m_cp * log(p2 / p1) / std::log(t2 / t1);
@@ -243,10 +225,5 @@ namespace thermo
         return ref.m_cp == other.m_cp && ref.m_r == other.m_r;
     }
 }
-
-// clang-format off
-#ifdef LIBTHERMO_USE_XTENSOR
-    #include "libthermo/detail/ideal_gas_xt_impl.hpp"
-#endif
 
 #endif

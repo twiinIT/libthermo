@@ -1,8 +1,5 @@
 #include "libthermo/poly_gas.hpp"
 
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xio.hpp"
-
 #include "gtest/gtest.h"
 
 #include <memory>
@@ -13,7 +10,7 @@ using namespace thermo;
 
 TEST(PolyGas, cp_tensor)
 {
-    auto props = PolyGasProps<4>({ 0., 0., 0., 1004.4 }, 0., 287.05);
+    auto props = PolyGasProps<double, 4>({ 0., 0., 0., 1004.4 }, 0., 287.05);
     auto dry_air = PolyGas(props);
 
     EXPECT_EQ(dry_air.r(), 287.05);

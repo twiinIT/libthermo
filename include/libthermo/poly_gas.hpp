@@ -104,10 +104,7 @@ namespace thermo
         PolyGas(const P& properties)
             : m_props(properties){};
 
-        template <class T, IS_NOT_XTENSOR>
-        auto gamma(const T& t) const;
-
-        template <class T, IS_XTENSOR>
+        template <class T>
         auto gamma(const T& t) const;
 
         template <class T>
@@ -116,30 +113,18 @@ namespace thermo
         template <class T>
         auto h(const T& t) const;
 
-        template <class T, IS_NOT_XTENSOR>
+        template <class T>
         auto phi(const T& t) const;
 
-        template <class T, IS_XTENSOR>
-        auto phi(const T& t) const;
-
-        template <class T, IS_NOT_XTENSOR>
-        auto dphi(const T& t1, const T& t2) const;
-
-        template <class T, IS_XTENSOR>
+        template <class T>
         auto dphi(const T& t1, const T& t2) const;
 
         value_t r() const;
 
-        template <class T, IS_NOT_XTENSOR>
+        template <class T>
         auto pr(const T& t1, const T& t2, const T& eff_poly) const;
 
-        template <class T, class E, IS_XTENSOR>
-        auto pr(const T& t1, const T& t2, const E& eff_poly) const;
-
-        template <class T, IS_NOT_XTENSOR>
-        auto eff_poly(const T& p1, const T& t1, const T& p2, const T& t2) const;
-
-        template <class T, IS_XTENSOR>
+        template <class T>
         auto eff_poly(const T& p1, const T& t1, const T& p2, const T& t2) const;
 
         template <class T>
@@ -167,7 +152,7 @@ namespace thermo
     };
 
     template <class P>
-    template <class T, IS_NOT_XTENSOR_>
+    template <class T>
     auto PolyGas<P>::gamma(const T& t) const
     {
         auto tmp_cp = cp(t);
@@ -193,7 +178,7 @@ namespace thermo
     }
 
     template <class P>
-    template <class T, IS_NOT_XTENSOR_>
+    template <class T>
     auto PolyGas<P>::phi(const T& t) const
     {
         using namespace detail;
@@ -202,7 +187,7 @@ namespace thermo
     }
 
     template <class P>
-    template <class T, IS_NOT_XTENSOR_>
+    template <class T>
     auto PolyGas<P>::dphi(const T& t1, const T& t2) const
     {
         using namespace detail;
@@ -218,14 +203,14 @@ namespace thermo
     }
 
     template <class P>
-    template <class T, IS_NOT_XTENSOR_>
+    template <class T>
     auto PolyGas<P>::pr(const T& t1, const T& t2, const T& eff_poly) const
     {
         return std::exp(dphi(t1, t2) * eff_poly / m_props.r);
     }
 
     template <class P>
-    template <class T, IS_NOT_XTENSOR_>
+    template <class T>
     auto PolyGas<P>::eff_poly(const T& p1, const T& t1, const T& p2, const T& t2) const
     {
         return r() * log(p2 / p1) / dphi(t1, t2);
@@ -390,10 +375,5 @@ namespace thermo
         return v / std::sqrt(gamma(ts) * r_ * ts);
     }
 }
-
-// clang-format off
-#ifdef LIBTHERMO_USE_XTENSOR
-    #include "libthermo/detail/poly_gas_xt_impl.hpp"
-#endif
 
 #endif

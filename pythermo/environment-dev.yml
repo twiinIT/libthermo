@@ -9,7 +9,4 @@ dependencies:
   - gmock
   - pybind11
   - pytest
-  - xtensor
-  - xsimd
-  - xtensor-python
   - numpy

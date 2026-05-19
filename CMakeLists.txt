@@ -71,15 +71,6 @@ if (LIBTHERMO_USE_FMA)
     )
 endif()
 
-if (LIBTHERMO_USE_XTENSOR)
-    find_package(xtensor REQUIRED)
-    target_compile_definitions(libthermo
-        INTERFACE
-            LIBTHERMO_USE_XTENSOR
-    )
-    target_link_libraries(libthermo INTERFACE xtensor)
-endif()
-
 target_link_libraries(libthermo
     INTERFACE           
         ${Boost_LIBRARIES}
