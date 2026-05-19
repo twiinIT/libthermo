@@ -1,8 +1,5 @@
 #include "libthermo/ideal_gas.hpp"
 
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xio.hpp"
-
 #include "gtest/gtest.h"
 
 #include <memory>
@@ -10,47 +7,6 @@
 
 using namespace thermo;
 
-TEST(IdealGas, cp_tensor)
-{
-    IdealGas gas(287., 1004.685045);
-    std::cout << gas.cp(288.15) << std::endl;
-
-    xt::xtensor<double, 1> t = { 288.25, 400. };
-    std::cout << gas.cp(t) << std::endl;
-
-    xt::xtensor<double, 2> t2 = { { 288.25, 400. } };
-    std::cout << gas.cp(t2) << std::endl;
-}
-
-TEST(IdealGas, h_tensor)
-{
-    IdealGas gas(287., 1004.685045);
-    std::cout << gas.h(288.15) << std::endl;
-
-    xt::xtensor<double, 1> t = { 288.25, 400. };
-    std::cout << gas.h(t) << std::endl;
-
-    xt::xtensor<double, 2> t2 = { { 288.25, 400. } };
-    std::cout << gas.h(t2) << std::endl;
-}
-
-TEST(IdealGas, phi_tensor)
-{
-    IdealGas gas(287., 1004.685045);
-    std::cout << gas.phi(288.15) << std::endl;
-
-    xt::xtensor<double, 1> t = { 288.25, 400. };
-    std::cout << gas.phi(t) << std::endl;
-
-    xt::xtensor<double, 2> t2 = { { 288.25, 400. } };
-    std::cout << gas.phi(t2) << std::endl;
-}
-
-TEST(IdealGas, pr_tensor)
-{
-    IdealGas gas(287., 1004.685045);
-    std::cout << gas.pr(288.15, 400., 0.8) << std::endl;
-}
 
 TEST(IdealGas, Constant)
 {

@@ -12,7 +12,6 @@ set(CMAKE_MODULE_PATH
 
 find_package(xtensor-python REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
-find_package(TBB REQUIRED)
 find_package(NumPy REQUIRED)
 find_package(Python COMPONENTS Interpreter Development)
 
@@ -28,9 +27,6 @@ pybind11_add_module(pythermo_core
 target_link_libraries(pythermo_core
     PUBLIC
         libthermo
-    PRIVATE
-        xtensor-python
-        TBB::tbb
 )
 target_include_directories(pythermo_core PUBLIC ${NUMPY_INCLUDE_DIRS})
 

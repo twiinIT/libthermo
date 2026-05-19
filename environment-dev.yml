@@ -7,9 +7,6 @@ dependencies:
   - ninja
   - cxx-compiler
   - gtest
-  - xtensor>=0.24,<0.24.6
-  - xsimd=9.*
-  - tbb-devel
   - xtensor-python
   - pybind11
   - python
