@@ -4,9 +4,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 
-set(CMAKE_CXX_STANDARD 14)
-cmake_minimum_required (VERSION 3.9)
-cmake_policy(VERSION 3.9)
+cmake_minimum_required(VERSION 3.28)
 
 project (libthermo)
 
@@ -15,7 +13,6 @@ option(BUILD_TESTS "Enable C++ tests for libthermo" OFF)
 option(BUILD_BENCHS "Enable C++ benchmarks for libthermo" OFF)
 option(BUILD_PY "Build Python bindings of libthermo" OFF)
 option(LIBTHERMO_USE_FMA "Use FMA instructions in libthermo" ON)
-option(LIBTHERMO_USE_XTENSOR "Enable C++ xtensor for libthermo" OFF)
 
 # Set installation directories (CMAKE_INSTALL_INCLUDEDIR, CMAKE_INSTALL_BINDIR, CMAKE_INSTALL_LIBDIR)
 include(GNUInstallDirs)
@@ -58,12 +55,6 @@ target_include_directories(
 
 find_package(Boost COMPONENTS math)
 
-if(WIN32 AND (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC"))
-    target_compile_options(libthermo INTERFACE /arch:AVX2)
-elseif(UNIX AND (CMAKE_CXX_COMPILER_ID STREQUAL "GNU"))
-    target_compile_options(libthermo INTERFACE -mfma)
-endif()
-
 if (LIBTHERMO_USE_FMA)
     target_compile_definitions(libthermo
         INTERFACE
@@ -73,7 +64,7 @@ endif()
 
 target_link_libraries(libthermo
     INTERFACE           
-        ${Boost_LIBRARIES}
+        Boost::boost
 )
 
 install(TARGETS libthermo 

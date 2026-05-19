@@ -6,33 +6,38 @@
 
 project(pythermo)
 
-set(CMAKE_MODULE_PATH
-    ${CMAKE_SOURCE_DIR}/cmake
-    ${CMAKE_MODULE_PATH})
+if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
 
-find_package(xtensor-python REQUIRED)
-find_package(pybind11 CONFIG REQUIRED)
-find_package(NumPy REQUIRED)
-find_package(Python COMPONENTS Interpreter Development)
+find_package(Python 3.8
+  REQUIRED COMPONENTS Interpreter Development.Module
+  OPTIONAL_COMPONENTS Development.SABIModule
+)
+
+execute_process(
+  COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
+  OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE nanobind_ROOT)
+find_package(nanobind CONFIG REQUIRED)
 
 set(PYTHERMO_SRCS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-pybind11_add_module(pythermo_core
+nanobind_add_module(pythermo_core
     ${PYTHERMO_SRCS_DIR}/main.cpp
     ${PYTHERMO_SRCS_DIR}/thermo.cpp
     ${PYTHERMO_SRCS_DIR}/ideal_gas.cpp
-    ${PYTHERMO_SRCS_DIR}/poly_gas.cpp
+    # ${PYTHERMO_SRCS_DIR}/poly_gas.cpp
 )
+
+target_compile_features(pythermo_core PUBLIC cxx_std_20)
 
 target_link_libraries(pythermo_core
     PUBLIC
         libthermo
 )
-target_include_directories(pythermo_core PUBLIC ${NUMPY_INCLUDE_DIRS})
-
-if (WIN32)
-    target_compile_definitions(pythermo_core PUBLIC NOMINMAX)
-endif ()
 
 install(TARGETS pythermo_core
         LIBRARY DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/pythermo/)
+
+        cmake_minimum_required(VERSION 3.28)
