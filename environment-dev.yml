@@ -1,15 +1,13 @@
-name: libthermo
+name: libthermo2
 channels:
   - conda-forge
 dependencies:
   - cmake
-  - make
   - ninja
   - cxx-compiler
   - gtest
-  - xtensor-python
-  - pybind11
+  - nanobind
   - python
   - numpy
-  - nlohmann_json
   - boost
+  - clang-format
