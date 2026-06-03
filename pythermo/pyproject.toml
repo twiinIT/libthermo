@@ -1,10 +1,10 @@
 [build-system]
-requires = ["scikit-build-core >=0.10", "nanobind", "numpy"]
+requires = ["scikit-build-core >=0.10", "nanobind"]
 build-backend = "scikit_build_core.build"
 
 [project]
 name = "libthermo"
-version = "0.3.1"
+version = "0.4.0"
 description = "Python bindings of libthermo, a fast C++ thermodynamical library"
 authors = [
     { name = "Adrien Delsalle", email = "ad.delsalle@gmail.com" },
@@ -16,18 +16,20 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: Implementation :: CPython",
 ]
-requires-python = ">=3.10"
-dependencies = [
-    "numpy>=1.24",
-]
+requires-python = ">=3.12"
+dependencies = []
 
 [project.urls]
 Homepage = "https://github.com/twiinIT/libthermo"
 
 [tool.scikit-build]
 #minimum-version = "build-system.requires"
-#cmake.build-type = "Release"
 wheel.packages = ["pythermo"]
+wheel.py-api = "cp312"
+cmake.build-type = "Release"
+cmake.args = [
+  "-GNinja"
+]
 
 [tool.scikit-build.cmake.define]
 CMAKE_BUILD_TYPE = "Release"
