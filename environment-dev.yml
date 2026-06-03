@@ -1,4 +1,4 @@
-name: libthermo2
+name: libthermo
 channels:
   - conda-forge
 dependencies:
@@ -8,6 +8,5 @@ dependencies:
   - gtest
   - nanobind
   - python
-  - numpy
   - boost
   - clang-format
