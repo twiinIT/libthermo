@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2023, twiinIT
+// Copyright (c) 2021-2026, twiinIT
 //
 // Distributed under the terms of the BSD 3-Clause License.
 //
@@ -8,55 +8,62 @@
 
 #include "libthermo/poly_gas.hpp"
 
+#include <nanobind/stl/vector.h>
+#include <nanobind/stl/array.h>
 
-namespace py = pybind11;
+
+namespace nb = nanobind;
 using namespace thermo;
 
 namespace pythermo
 {
-    using PG8 = PolyGas<PolyGasProps<double, 8>>;
-
-    class PyPG8 : public PyThermoHelper<PG8, array_t>
+    class PyPoly8Gas : public PyThermo<PolyGas<PolyGasProps<double, 8>>>
     {
     public:
-        using PG8::properties;
-
-        PyPG8(const PolyGasProps<double, 8>& props)
-            : PyThermoHelper<PG8, array_t>(props)
+        PyPoly8Gas(const PolyGasProps<double, 8>& properties)
         {
+            p_gas = std::make_unique<PolyGas<PolyGasProps<double, 8>>>(properties);
+        }
+
+        const PolyGasProps<double, 8>& properties() const
+        {
+            return p_gas->properties();
         }
     };
 
-    void poly_gas(py::module_& m)
+
+    void bind_poly_gas(nb::module_& m)
     {
-        using namespace py::literals;
+        using namespace nb::literals;
 
-        m.def("mix8", &mix<double, 8>, "cps"_a, "h0s"_a, "rs"_a, "weights"_a);
-
-        auto polygasprops8 = py::class_<PolyGasProps<double, 8>>(m, "PolyGasProps8")
-                                 .def(py::init<const std::array<double, 8>&, const double&, const double&>(),
+        auto polygasprops8 = nb::class_<PolyGasProps<double, 8>>(m, "PolyGasProps8")
+                                 .def(nb::init<const std::array<double, 8>&, const double&, const double&>(),
                                       "cp_coeffs"_a,
                                       "h0"_a,
                                       "r"_a);
-        polygasprops8.def(py::pickle(
-            [](const PolyGasProps<double, 8>& p) -> py::tuple {  // __getstate__
-                return py::make_tuple(p.cp_coeffs, p.h_coeffs[8], p.r);
-            },
-            [](py::tuple t) -> PolyGasProps<double, 8>
-            {  // __setstate__
-                PolyGasProps<double, 8> p(t[0].cast<std::array<double, 8>>(), t[1].cast<double>(), t[2].cast<double>());
-                return p;
-            }));
 
-        auto polygas8 = py::class_<PyPG8, PyThermo<array_t>, std::shared_ptr<PyPG8>>(m, "PolyGas8");
-        polygas8.def(py::init<const PolyGasProps<double, 8>&>(), "gas_properties"_a);
-        polygas8.def(py::pickle(
-            [](const PyPG8& g) -> py::tuple {  // __getstate__
-                return py::make_tuple(&g.properties());
-            },
-            [](py::tuple t) -> PyPG8 {  // __setstate__
-                PyPG8 g(t[0].cast<PolyGasProps<double, 8>>());
-                return g;
-            }));
+        polygasprops8
+            .def("__getstate__",
+                 [](const PolyGasProps<double, 8>& p) -> nb::tuple
+                 { return nb::make_tuple(p.cp_coeffs, p.h_coeffs[8], p.r); })
+            .def("__setstate__",
+                 [](PolyGasProps<double, 8>& p, const nb::tuple& state) -> void
+                 {
+                     new (&p) PolyGasProps<double, 8>(nb::cast<std::array<double, 8>>(state[0]),
+                                                      nb::cast<double>(state[1]),
+                                                      nb::cast<double>(state[2]));
+                 });
+
+        m.def("mix8", &mix<double, 8>, "cps"_a, "h0s"_a, "rs"_a, "weights"_a);
+
+        auto gas = nb::class_<PyPoly8Gas>(m, "PolyGas8");
+        gas.def(nb::init<const PolyGasProps<double, 8>&>(), "gas_properties"_a);
+
+        bind_thermo_extended_interface<PyPoly8Gas>(gas);
+
+        gas.def("__getstate__", [](const PyPoly8Gas& g) -> nb::tuple { return nb::make_tuple(g.properties()); })
+            .def("__setstate__",
+                 [](PyPoly8Gas& g, const nb::tuple& state) -> void
+                 { new (&g) PyPoly8Gas(nb::cast<PolyGasProps<double, 8>>(state[0])); });
     }
 }

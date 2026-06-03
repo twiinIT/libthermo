@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2023, twiinIT
+// Copyright (c) 2021-2026, twiinIT
 //
 // Distributed under the terms of the BSD 3-Clause License.
 //
@@ -102,7 +102,7 @@ namespace thermo
         using value_t = typename P::value_t;
 
         PolyGas(const P& properties)
-            : m_props(properties){};
+            : m_props(properties) {};
 
         template <class T>
         auto gamma(const T& t) const;
@@ -353,21 +353,24 @@ namespace thermo
         if (wqa < 0. || wqa > wqa_crit)
             throw domain_error();
 
-        auto err_v = [&](double ts) -> double {
+        auto err_v = [&](double ts) -> double
+        {
             ps = pt * pr(tt, ts, 1.);
             v = std::sqrt(2 * (ht - h(ts)));
             return ps / (r_ * ts) * v - wqa;
         };
 
         boost::uintmax_t niter = max_iter;
-        auto res = boost::math::tools::toms748_solve(err_v,
-                                                     ts_crit,
-                                                     tt,
-                                                     [&tol](const auto& a, const auto& b) -> bool {
-                                                         using std::fabs;
-                                                         return fabs(a - b) / (std::min)(fabs(a), fabs(b)) <= tol;
-                                                     },
-                                                     niter);
+        auto res = boost::math::tools::toms748_solve(
+            err_v,
+            ts_crit,
+            tt,
+            [&tol](const auto& a, const auto& b) -> bool
+            {
+                using std::fabs;
+                return fabs(a - b) / (std::min) (fabs(a), fabs(b)) <= tol;
+            },
+            niter);
         ts = res.first;
         ps = pt * pr(tt, ts, 1.);
         v = std::sqrt(2 * (ht - h(ts)));
