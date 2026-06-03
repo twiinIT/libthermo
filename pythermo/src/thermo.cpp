@@ -7,8 +7,6 @@
 #include "thermo.hpp"
 
 #include "libthermo/exceptions.hpp"
-#include "libthermo/ideal_gas.hpp"
-#include "libthermo/poly_gas.hpp"
 
 #include <nanobind/trampoline.h>
 
@@ -101,7 +99,7 @@ namespace pythermo
 #undef THERMO_INTERFACE_TRAMPOLINE
 #undef THERMO_EXT_INTERFACE_TRAMPOLINE
 
-    void thermo_base(nb::module_& m)
+    void bind_thermo_base(nb::module_& m)
     {
         using namespace nb::literals;
 

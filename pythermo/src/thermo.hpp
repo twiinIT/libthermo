@@ -18,11 +18,70 @@
 
 namespace pythermo
 {
-    template <class A>
-    class PyThermo
-        : public thermo::ThermoExtendedInterface<double>
-        , public thermo::ThermoInterface<A>
+    template <class T>
+    class PyThermo : public thermo::ThermoExtendedInterface<double>
     {
+    protected:
+        PyThermo() = default;
+        std::unique_ptr<T> p_gas;
+
+    public:
+        virtual double r() const override
+        {
+            return p_gas->r();
+        }
+        virtual double gamma(const double& t) const override
+        {
+            return p_gas->gamma(t);
+        }
+        virtual double cp(const double& t) const override
+        {
+            return p_gas->cp(t);
+        }
+        virtual double phi(const double& t) const override
+        {
+            return p_gas->phi(t);
+        }
+        virtual double pr(const double& t1, const double& t2, const double& eff_poly) const override
+        {
+            return p_gas->pr(t1, t2, eff_poly);
+        }
+        virtual double eff_poly(const double& p1, const double& t1, const double& p2, const double& t2) const override
+        {
+            return p_gas->eff_poly(p1, t1, p2, t2);
+        }
+        virtual double h(const double& t) const override
+        {
+            return p_gas->h(t);
+        }
+        virtual double static_t(const double& tt,
+                                const double& mach,
+                                double tol,
+                                std::size_t max_iter = 30) const override
+        {
+            return p_gas->static_t(tt, mach, tol, max_iter);
+        }
+        virtual double t_f_h(const double& h, double tol, std::size_t max_iter = 30) const override
+        {
+            return p_gas->t_f_h(h, tol, max_iter);
+        }
+        virtual double t_f_phi(const double& phi, double tol, std::size_t max_iter = 30) const override
+        {
+            return p_gas->t_f_phi(phi, tol, max_iter);
+        }
+        virtual double t_f_pr(const double& pr,
+                              const double& t1,
+                              const double& eff_poly,
+                              double tol,
+                              std::size_t max_iter = 30) const override
+        {
+            return p_gas->t_f_pr(pr, t1, eff_poly, tol, max_iter);
+        }
+        virtual double mach_f_wqa(
+            const double& pt, const double& tt, const double& wqa, double tol, std::size_t max_iter = 30) const override
+        {
+            return p_gas->mach_f_wqa(pt, tt, wqa, tol, max_iter);
+        }
     };
 
     template <class T, class C>
@@ -95,11 +154,11 @@ namespace pythermo
               "max_iter"_a = 30);
     }
 
-    void thermo_base(nanobind::module_& m);
+    void bind_thermo_base(nanobind::module_& m);
 
-    void ideal_gas(nanobind::module_& m);
+    void bind_ideal_gas(nanobind::module_& m);
 
-    void poly_gas(nanobind::module_& m);
+    void bind_poly_gas(nanobind::module_& m);
 }
 
 #endif
