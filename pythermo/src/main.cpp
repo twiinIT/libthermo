@@ -6,20 +6,16 @@
 
 #include "thermo.hpp"
 
-// #include "libthermo/ideal_gas.hpp"
-// #include "libthermo/poly_gas.hpp"
-
 #include <nanobind/nanobind.h>
 
-
-namespace nb = nanobind;
 // using namespace thermo;
 using namespace pythermo;
 
 NB_MODULE(pythermo_core, m)
 {
     m.doc() = "Python bindings of the C++ implementation of the thermodynamic library 'libthermo'.";
-    thermo_base(m);
-    ideal_gas(m);
-    // poly_gas(m);
+
+    bind_thermo_base(m);
+    bind_ideal_gas(m);
+    bind_poly_gas(m);
 }
