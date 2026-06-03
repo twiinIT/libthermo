@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2023, twiinIT
+// Copyright (c) 2021-2026, twiinIT
 //
 // Distributed under the terms of the BSD 3-Clause License.
 //
