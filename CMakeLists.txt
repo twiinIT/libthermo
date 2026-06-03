@@ -8,6 +8,8 @@ cmake_minimum_required(VERSION 3.28)
 
 project (libthermo)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Build options
 option(BUILD_TESTS "Enable C++ tests for libthermo" OFF)
 option(BUILD_BENCHS "Enable C++ benchmarks for libthermo" OFF)
@@ -38,8 +40,6 @@ set(LIBTHERMO_HEADERS
     thermo.hpp
     type_traits.hpp
     version.hpp
-    detail/ideal_gas_xt_impl.hpp
-    detail/poly_gas_xt_impl.hpp
     detail/polyval.hpp
 )
 
