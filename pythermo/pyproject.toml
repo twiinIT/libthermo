@@ -16,7 +16,6 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: Implementation :: CPython",
 ]
-requires-python = ">=3.12"
 dependencies = []
 
 [project.urls]
@@ -25,7 +24,6 @@ Homepage = "https://github.com/twiinIT/libthermo"
 [tool.scikit-build]
 #minimum-version = "build-system.requires"
 wheel.packages = ["pythermo"]
-wheel.py-api = "cp312"
 cmake.build-type = "Release"
 cmake.args = [
   "-GNinja"
