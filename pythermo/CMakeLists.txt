@@ -28,7 +28,7 @@ find_package(nanobind CONFIG REQUIRED)
 set(PYTHERMO_SRCS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 nanobind_add_module(pythermo_core
-    STABLE_ABI LTO
+    LTO
     ${PYTHERMO_SRCS_DIR}/main.cpp
     ${PYTHERMO_SRCS_DIR}/thermo.cpp
     ${PYTHERMO_SRCS_DIR}/ideal_gas.cpp
